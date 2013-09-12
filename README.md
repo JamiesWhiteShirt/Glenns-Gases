@@ -1,4 +1,4 @@
-Glenns-Gases
+Glenn's Gases
 ============
 
 A Minecraft mod aiming to add gases to the game. It is currently being developed with extension in mind.
