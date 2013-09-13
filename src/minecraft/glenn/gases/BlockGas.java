@@ -54,9 +54,9 @@ public class BlockGas extends Block
 	 * @param opacity - Higher values will increase the opacity of this gas. This will also affect how well light passes through it.
 	 * @param density - A value determining how dense the gas will be relative to air.
 	 * <ul><li><b>density > 0</b> Will produce a falling gas. Greater values means the gas will move faster.</li>
-	 * <li><b>density < 0</b> Will produce a rising gas. Lower values means the gas will move faster</li>
+	 * <li><b>density < 0</b> Will produce a rising gas. Lower values means the gas will move faster.</li>
 	 * <li><b>density = 0</b> Will produce a floating gas which will spread in all directions.</li></ul>
-	 * @param combustibility - How the block will react with any blocks registered with {@link Gases#registerIgnitionBlock(int blockID)}.
+	 * @param combustibility - How the block will react with any blocks registered with {@link Gases#registerIgnitionBlock(int)}.
 	 */
     public BlockGas(int id, int color, int opacity, int density, Combustibility combustibility)
     {
@@ -314,7 +314,7 @@ public class BlockGas extends Block
     }*/
     
     /**
-     * Called whenever a gas {@link glenn.gases.reaction.Reaction reacts} with a block registered with {@link Gases#registerIgnitionBlock(int blockID)}.
+     * Called whenever a gas {@link glenn.gases.reaction.Reaction reacts} with a block registered with {@link Gases#registerIgnitionBlock(int)}.
      * @param par1World
      * @param par2
      * @param par3
