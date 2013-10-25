@@ -4,11 +4,11 @@ import java.util.Random;
 
 import net.minecraft.world.World;
 
-public class BlockGasVoid extends BlockGasHazard
+public class BlockGasVoid extends BlockGas
 {
-	public BlockGasVoid(int id, int color, int opacity, int density, Combustibility combustibility, float damage)
+	public BlockGasVoid(int id)
     {
-        super(id, color, opacity, density, combustibility, damage);
+        super(id);
     }
 
     protected int getGasDecay(World par1World, int par2, int par3, int par4, Random par5Random)

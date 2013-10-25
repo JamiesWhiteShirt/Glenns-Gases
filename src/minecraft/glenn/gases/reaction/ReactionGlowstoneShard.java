@@ -18,7 +18,7 @@ public class ReactionGlowstoneShard extends ReactionSpecialEvent
 		super(20, block1, block2, true, true);
 	}
 	
-	public static int getDelay()
+	public int getDelay(World world, int block1X, int block1Y, int block1Z, int block2X, int block2Y, int block2Z)
 	{
 		return 0;
 	}

@@ -15,9 +15,27 @@ public class ReactionIgnition extends Reaction
 		super(10);
 	}
 	
-	public static int getDelay()
+	public int getDelay(World world, int block1X, int block1Y, int block1Z, int block2X, int block2Y, int block2Z)
 	{
-		return 8;
+		int block1ID = world.getBlockId(block1X, block1Y, block1Z);
+		int block2ID = world.getBlockId(block2X, block2Y, block2Z);
+		
+		if(Gases.isIgnitionBlock(block2ID))
+		{
+			if(Block.blocksList[block1ID] instanceof BlockGas)
+			{
+				return ((BlockGas)Block.blocksList[block1ID]).type.combustibility.fireSpreadRate;
+			}
+		}
+		else if(Gases.isIgnitionBlock(block1ID))
+		{
+			if(Block.blocksList[block2ID] instanceof BlockGas)
+			{
+				return ((BlockGas)Block.blocksList[block2ID]).type.combustibility.fireSpreadRate;
+			}
+		}
+		
+		return -1;
 	}
 	
 	public boolean isErroneous()

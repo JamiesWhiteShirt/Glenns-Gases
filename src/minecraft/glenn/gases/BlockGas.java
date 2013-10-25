@@ -12,28 +12,22 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 /**
- * To allow a gas to float in pipes, create a {@link glenn.gases.BlockGasPipe BlockGasPipe} for the gas.
+ * To allow a gas to flow in pipes, create a {@link glenn.gases.BlockGasPipe BlockGasPipe} for the gas.
  * @author Glenn
  *
  */
 public class BlockGas extends Block
 {
-	public int color;
-	public int opacity;
-	public int density;
-	public int evaporation;
-	public Combustibility combustibility;
-	
-	public int blindnessRate;
-	public int suffocationRate;
-	public int slownessRate;
+	public GasType type;
 
 	//                                   Ring 0       Ring 1        Ring 2
 	private static final int[] ringsX = {1, 0, -1, 0, 1, -1, -1, 1, 2, 0, -2, 0};
@@ -58,52 +52,12 @@ public class BlockGas extends Block
 	 * <li><b>density = 0</b> Will produce a floating gas which will spread in all directions.</li></ul>
 	 * @param combustibility - How the block will react with any blocks registered with {@link Gases#registerIgnitionBlock(int)}.
 	 */
-    public BlockGas(int id, int color, int opacity, int density, Combustibility combustibility)
+    public BlockGas(int id)
     {
-        super(id, Gases.gasMaterial);
-
-        this.color = color;
-        this.opacity = opacity;
-        this.density = density;
-        this.combustibility = combustibility;
-        
-        this.blindnessRate = 0;
-        this.suffocationRate = 0;
-        this.slownessRate = 0;
-
-        this.setTickRandomly(true);
-        this.setLightOpacity(opacity);
-        this.disableStats();
-        if(combustibility != Combustibility.NONE)
-        {
-        	this.setBurnProperties(id, 1000, 1000);
-        }
-    }
-    
-    /**
-     * Sets how much this block will evaporate
-     * @param evaporation
-     * @return
-     */
-    public BlockGas setEvaporation(int evaporation)
-    {
-    	this.evaporation = evaporation;
-    	return this;
-    }
-    
-    /**
-     * Sets the rates of effects that will affect the player upon being breathed.
-     * @param blindness
-     * @param suffocation
-     * @param slowness
-     * @return
-     */
-    public BlockGas setEffectRates(int blindness, int suffocation, int slowness)
-    {
-    	this.blindnessRate = blindness;
-    	this.suffocationRate = suffocation;
-    	this.slownessRate = slowness;
-    	return this;
+		super(id, Gases.gasMaterial);
+		
+		this.setTickRandomly(true);
+		this.disableStats();
     }
 
     /*public boolean getBlocksMovement(IBlockAccess par1IBlockAccess, int par2, int par3, int par4)
@@ -111,18 +65,35 @@ public class BlockGas extends Block
         return this.blockMaterial != Material.lava;
     }*/
 
+    public AxisAlignedBB getSelectedBoundingBoxFromPool(World par1World, int par2, int par3, int par4)
+    {
+    	int metadata = par1World.getBlockMetadata(par2, par3, par4);
+    	double minY = getMinY(metadata);
+    	double maxY = getMaxY(metadata);
+
+    	return AxisAlignedBB.getAABBPool().getAABB((double)par2, (double)par3 + minY, (double)par4, (double)par2 + 1.0D, (double)par3 + maxY, (double)par4 + 1.0D);
+    }
+    
+    public void onEntityCollidedWithBlock(World par1World, int par2, int par3, int par4, Entity par5Entity)
+    {
+    	if(type.damage > 0.0F)
+    	{
+    		par5Entity.attackEntityFrom(DamageSource.generic, type.damage);
+    	}
+    }
+
     /**
      * Returns a integer with hex for 0xrrggbb with this color multiplied against the blocks color. Note only called
      * when first determining what to render.
      */
     public int colorMultiplier(IBlockAccess par1IBlockAccess, int par2, int par3, int par4)
     {
-        return color;
+        return type.color;
     }
 
     public int getRenderColor(int metadata)
     {
-    	return color;
+    	return type.color;
     }
 
     /**
@@ -224,11 +195,11 @@ public class BlockGas extends Block
      */
     public double getMinY(int metadata)
     {
-    	if(density > 0)
+    	if(type.density > 0)
     	{
     		return 0.0D;
     	}
-    	else if(density < 0)
+    	else if(type.density < 0)
     	{
     		return (double)metadata / 16.0D;
     	} else
@@ -245,11 +216,11 @@ public class BlockGas extends Block
      */
     public double getMaxY(int metadata)
     {
-    	if(density > 0)
+    	if(type.density > 0)
     	{
     		return 1.0D - (double)metadata / 16.0D;
     	}
-    	else if(density < 0)
+    	else if(type.density < 0)
     	{
     		return 1.0D;
     	} else
@@ -324,16 +295,16 @@ public class BlockGas extends Block
      */
     public boolean onFire(World par1World, int par2, int par3, int par4, Random par5Random)
     {
-    	if(combustibility.explodes)
+    	if(type.combustibility.explosionPower > 0.0F)
 		{
 	        if (!par1World.isRemote)
 	        {
 	        	par1World.setBlock(par2, par3, par4, 0);
-	        	par1World.createExplosion(null, (double)par2 + 0.5D, (double)par3 + 0.5D, (double)par4 + 0.5D, Gases.gasExplosionFactor, true);
+	        	par1World.createExplosion(null, (double)par2 + 0.5D, (double)par3 + 0.5D, (double)par4 + 0.5D, type.combustibility.explosionPower * Gases.gasExplosionFactor, true);
 	        }
 	        return true;
 		}
-    	else if(combustibility.catchesFire)
+    	else if(type.combustibility.fireSpreadRate >= 0)
 		{
 			par1World.setBlock(par2, par3, par4, Block.fire.blockID);
 			
@@ -471,6 +442,7 @@ public class BlockGas extends Block
     private int getDelayForUpdate(World world, int x, int y, int z)
     {
     	Reaction reaction = new ReactionEmpty();
+    	int delay = -1;
 		
 		for(int i = 0; i < 6; i++)
 		{
@@ -484,20 +456,19 @@ public class BlockGas extends Block
 			if(reaction.isErroneous() || reaction2.priority < reaction.priority)
 			{
 				reaction = reaction2;
+				delay = reaction.getDelay(world, x, y, z, x + xDirection, y + yDirection, z + zDirection);
 			}
 		}
 		
-		int delay = reaction.getDelay();
-		
 		if(delay == -1)
 		{
-			if(density > 0)
+			if(type.density > 0)
 	    	{
-	        	delay = (int)(128.0F / (float)density);
+	        	delay = (int)(128.0F / (float)type.density);
 	    	}
-	    	else if(density < 0)
+	    	else if(type.density < 0)
 	    	{
-	    		delay = (int)(-128.0F / (float)density);
+	    		delay = (int)(-128.0F / (float)type.density);
 	    	}
 	    	else
 	    	{
@@ -531,10 +502,10 @@ public class BlockGas extends Block
     	
     	//For technical reasons, metadata is a reverse representation of how much gas there is inside a block
     	int metadata = 16 - par1World.getBlockMetadata(par2, par3, par4) - getGasDecay(par1World, par2, par3, par4, par5Random);
-		boolean requiresTick = evaporation > 0;
+		boolean requiresTick = type.evaporationRate > 0;
     	
 		//If density is 0, the block will behave very differently.
-    	if(density == 0)
+    	if(type.density == 0)
     	{
     		//The gas will flow out from its position, but will priorify blocks around with the least amount of gas, and especially air. It will not flow into other blocks.
         	int[] metadataList = new int[6];
@@ -616,13 +587,13 @@ public class BlockGas extends Block
     		
     		if(requiresTick)
         	{
-        		par1World.scheduleBlockUpdate(par2, par3, par4, this.blockID, (int)(-128.0F / (float)density));
+        		par1World.scheduleBlockUpdate(par2, par3, par4, this.blockID, 10);
         	}
     		
     		return;
     	}
 
-    	int yDirection = density > 0 ? -1 : 1;
+    	int yDirection = type.density > 0 ? -1 : 1;
     	int directionBlockID = par1World.getBlockId(par2, par3 + yDirection, par4);
 		int directionBlockMetadata = 16 - par1World.getBlockMetadata(par2, par3 + yDirection, par4);
     	int reverseDirectionBlockID = par1World.getBlockId(par2, par3 - yDirection, par4);
@@ -637,19 +608,21 @@ public class BlockGas extends Block
     		}
     		par1World.setBlock(par2, par3, par4, 0);
     	}
-    	else if(directionBlockID != this.blockID && Block.blocksList[directionBlockID] instanceof BlockGas)
+    	else
     	{
-    		//If the block in the direction is another gas, it will swap the position of the gases according to their densities.
-    		int directionBlockDensity = ((BlockGas)Block.blocksList[directionBlockID]).density;
+    		if(directionBlockID != this.blockID && Block.blocksList[directionBlockID] instanceof BlockGas)
+        	{
+        		//If the block in the direction is another gas, it will swap the position of the gases according to their densities.
+        		int directionBlockDensity = ((BlockGas)Block.blocksList[directionBlockID]).type.density;
 
-    		if((density > 0 & density > directionBlockDensity) | (density < 0 & density < directionBlockDensity))
-    		{
-    			par1World.setBlock(par2, par3, par4, directionBlockID, 16 - directionBlockMetadata, 3);
-    			par1World.setBlock(par2, par3 + yDirection, par4, this.blockID, 16 - metadata, 3);
-    			return;
-    		}
-    	} else
-    	{
+        		if((type.density > 0 & type.density > directionBlockDensity) | (type.density < 0 & type.density < directionBlockDensity))
+        		{
+        			par1World.setBlock(par2, par3, par4, directionBlockID, 16 - directionBlockMetadata, 3);
+        			par1World.setBlock(par2, par3 + yDirection, par4, this.blockID, 16 - metadata, 3);
+        			return;
+        		}
+        	}
+    		
     		//If the block in the direction is the same gas, it will attempt to fill the other gas block.
     		if(directionBlockID == this.blockID)
     		{
@@ -835,7 +808,7 @@ public class BlockGas extends Block
      */
     protected int getGasDecay(World par1World, int par2, int par3, int par4, Random par5Random)
     {
-    	return evaporation > 0 && par5Random.nextInt(evaporation) == 0 ? 1 : 0;
+    	return type.evaporationRate > 0 && par5Random.nextInt(type.evaporationRate) == 0 ? 1 : 0;
     }
 
     /**
@@ -880,6 +853,6 @@ public class BlockGas extends Block
      */
     public boolean canCombustNormally()
     {
-    	return this.combustibility != Combustibility.NONE;
+    	return this.type.combustibility != Combustibility.NONE;
     }
 }

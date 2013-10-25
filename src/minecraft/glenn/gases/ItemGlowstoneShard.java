@@ -27,7 +27,9 @@ public class ItemGlowstoneShard extends Item
 
         if (!par2World.isRemote)
         {
-            par2World.spawnEntityInWorld(new EntityGlowstoneShard(par2World, par3EntityPlayer));
+        	EntityGlowstoneShard entity = new EntityGlowstoneShard(par2World, par3EntityPlayer);
+        	entity.shootingEntity = par3EntityPlayer;
+            par2World.spawnEntityInWorld(entity);
         }
 
         return par1ItemStack;

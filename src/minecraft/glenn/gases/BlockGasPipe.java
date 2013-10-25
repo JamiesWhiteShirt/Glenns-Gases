@@ -13,7 +13,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
-public class BlockGasPipe extends Block
+public class BlockGasPipe extends Block implements GasReceptor
 {
 	private static final int[] xDirection = new int[]{
 		0, 0, 1, -1, 0, 0
@@ -25,26 +25,27 @@ public class BlockGasPipe extends Block
 		0, 0, 0, 0, 1, -1
 	};
 	
-	private static final boolean[][][] branchedBlocks = new boolean[31][31][31];
+	/*private static final boolean[][][] branchedBlocks = new boolean[31][31][31];
 	private static final ArrayList<PipeBranch> branches = new ArrayList<PipeBranch>();
-	private static final ArrayList<IVec> ends = new ArrayList<IVec>();
+	private static final ArrayList<PipeBranch> looseEnds = new ArrayList<PipeBranch>();
+	private static final ArrayList<PipeBranch> ends = new ArrayList<PipeBranch>();*/
 	
 	/**
 	 * The gas block contained by this gas pipe.
 	 */
-	public final BlockGas containedGas;
+	public GasType type;
 	
 	/**
 	 * Constructs a new gas pipe block. Because of technical reasons, each type of gas needs its own gas pipe block for pipe usage.
 	 * @param par1 - Block ID
 	 * @param containedGas - The gas this pipe will carry
 	 */
-	public BlockGasPipe(int blockID, BlockGas containedGas)
+	public BlockGasPipe(int blockID)
 	{
 		super(blockID, Material.circuits);
-		this.containedGas = containedGas;
 		
 		this.setHardness(1.0F);
+		this.setTextureName("gases:pipe");
 	}
 	
 	/**
@@ -82,11 +83,18 @@ public class BlockGasPipe extends Block
     	}
     }
 	
-	public void updateTick(World world, int x, int y, int z, Random random)
+	public boolean receiveGas(World world, int x, int y, int z, int side, GasType gasType)
     {
-		branches.clear();
-		branches.add(new PipeBranch(0, 0, 0, 0, 0));
-		ends.clear();
+		final boolean[][][] branchedBlocks = new boolean[31][31][31];
+		branchedBlocks[15][15][15] = true;
+		final ArrayList<PipeBranch> branches = new ArrayList<PipeBranch>();
+		final ArrayList<PipeBranch> looseEnds = new ArrayList<PipeBranch>();
+		final ArrayList<PipeBranch> ends = new ArrayList<PipeBranch>();
+		
+		//branches.clear();
+		branches.add(new PipeBranch(0, 0, 0, side));
+		//ends.clear();
+		//looseEnds.clear();
 		
 		boolean stop = false;
 		while(branches.size() > 0 & !stop)
@@ -105,7 +113,7 @@ public class BlockGasPipe extends Block
 				
 				for(int j = 0; j < 6; j++)
 				{
-					if(j == branch.reverseDirection())
+					if(j == branch.getReverseDirection())
 					{
 						continue;
 					}
@@ -116,31 +124,38 @@ public class BlockGasPipe extends Block
 					boolean notBranched = !branchedBlocks[15 + branch.x + xDirection[j]][15 + branch.y + yDirection[j]][15 + branch.z + zDirection[j]];
 					
 					int directionBlockID = world.getBlockId(x2, y2, z2);
+					Block directionBlock = Block.blocksList[directionBlockID];
 					int directionBlockMetadata = world.getBlockMetadata(x2, y2, z2);
 					
-					if(branch.length < 14)
+					if(directionBlock != null)
 					{
-						if(/*directionBlockID != Gases.gasPipeEmpty.blockID && */Block.blocksList[directionBlockID] instanceof BlockGasPipe)
+						if(directionBlock instanceof BlockGasPipe)
 						{
 							connectedSurroundingBlocks++;
-							if(notBranched)
+							if(branch.length < 15 & notBranched)
 							{
-								newBranches[subBranches++] = new PipeBranch(branch.x + xDirection[j], branch.y + yDirection[j], branch.z + zDirection[j], j, branch.length + 1);
 								branchedBlocks[15 + branch.x + xDirection[j]][15 + branch.y + yDirection[j]][15 + branch.z + zDirection[j]] = true;
+								newBranches[subBranches++] = branch.branch(j);
 							}
+						}
+						else if(GasReceptor.class.isAssignableFrom(directionBlock.getClass()))
+						{
+							connectedSurroundingBlocks++;
+							ends.add(branch.branch(j));
 						}
 					}
 				}
 				
 				if(connectedSurroundingBlocks <= 0)
 				{
-					int x2 = x1 + xDirection[branch.direction];
-					int y2 = y1 + yDirection[branch.direction];
-					int z2 = z1 + zDirection[branch.direction];
+					PipeBranch branch2 = branch.branch(branch.getDirection());
+					int x2 = x + branch2.x;
+					int y2 = y + branch2.y;
+					int z2 = z + branch2.z;
 					
 					if(world.isAirBlock(x2, y2, z2))
 					{
-						ends.add(new IVec(x2, y2, z2));
+						looseEnds.add(branch2);
 					}
 				}
 				
@@ -170,14 +185,78 @@ public class BlockGasPipe extends Block
 			}
 		}
 		
-		if(ends.size() > 0)
+		PipeBranch pushedEnd = null;
+		
+		if(looseEnds.size() > 0)
 		{
-			IVec end = ends.get(random.nextInt(ends.size()));
+			pushedEnd = looseEnds.get(world.rand.nextInt(looseEnds.size()));
+			PipeBranch originPipe = pushedEnd.unBranch();
 			
-			world.setBlock(end.x, end.y, end.z, Gases.gasSmoke.blockID);
+			BlockGasPipe pipeBlock = (BlockGasPipe)Block.blocksList[world.getBlockId(x + originPipe.x, y + originPipe.y, z + originPipe.z)];
+			if(pipeBlock.type.gasBlock != null)
+			{
+				world.setBlock(x + pushedEnd.x, y + pushedEnd.y, z + pushedEnd.z, pipeBlock.type.gasBlock.blockID);
+			}
+			pushedEnd = originPipe;
+		}
+		else if(ends.size() > 0)
+		{
+			Collections.shuffle(ends);
+			
+			for(int i = 0; i < ends.size() & pushedEnd == null; i++)
+			{
+				PipeBranch end = ends.get(i);
+				int x1 = x + end.x;
+				int y1 = y + end.y;
+				int z1 = z + end.z;
+				
+				PipeBranch outPipe = end.unBranch();
+				int x2 = x + outPipe.x;
+				int y2 = y + outPipe.y;
+				int z2 = z + outPipe.z;
+				
+				GasReceptor endBlock = (GasReceptor)Block.blocksList[world.getBlockId(x1, y1, z1)];
+				GasType outGasType = null;
+				
+				Block sourceBlock = Block.blocksList[world.getBlockId(x2, y2, z2)];
+				if(sourceBlock instanceof BlockGasPipe)
+				{
+					outGasType = ((BlockGasPipe)sourceBlock).type;
+				}
+				else if(GasSource.class.isAssignableFrom(sourceBlock.getClass()))
+				{
+					outGasType = ((GasSource)sourceBlock).takeGasTypeFromSide(world, x2, y2, z2, outPipe.getReverseDirection());
+				}
+				
+				if(endBlock.receiveGas(world, x1, y1, z1, (int)end.getDirection(), outGasType))
+				{
+					pushedEnd = end.unBranch();
+				}
+			}
 		}
 		
-		for(int x1 = 0; x1 < 31; x1++)
+		if(pushedEnd != null)
+		{
+			//pushedEnd = pushedEnd.unBranch();
+			while(pushedEnd.length > 1)
+			{
+				int x1 = x + pushedEnd.x;
+				int y1 = y + pushedEnd.y;
+				int z1 = z + pushedEnd.z;
+				int block1 = world.getBlockId(x1, y1, z1);
+				pushedEnd = pushedEnd.unBranch();
+				int block2 = world.getBlockId(x + pushedEnd.x, y + pushedEnd.y, z + pushedEnd.z);
+				
+				if(block1 != block2)
+				{
+					world.setBlock(x1, y1, z1, block2);
+				}
+			}
+			
+			world.setBlock(x, y, z, gasType.gasPipe.blockID);
+		}
+		
+		/*for(int x1 = 0; x1 < 31; x1++)
 		{
 			for(int y1 = 0; y1 < 31; y1++)
 			{
@@ -188,7 +267,9 @@ public class BlockGasPipe extends Block
 			}
 		}
 		
-		branchedBlocks[15][15][15] = true;
+		branchedBlocks[15][15][15] = true;*/
+		
+		return pushedEnd != null;
     }
 	
 	/**
@@ -203,9 +284,39 @@ public class BlockGasPipe extends Block
     	}
     }
     
-    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int par6, float par7, float par8, float par9)
+    /*public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int par6, float par7, float par8, float par9)
     {
     	world.scheduleBlockUpdate(x, y, z, this.blockID, 0);
     	return true;
+    }*/
+    
+    /**
+     * Is this block (a) opaque and (b) a full 1m cube?  This determines whether or not to render the shared face of two
+     * adjacent blocks and also whether the player can attach torches, redstone wire, etc to this block.
+     */
+    public boolean isOpaqueCube()
+    {
+        return false;
+    }
+    
+    /**
+     * If this block doesn't render as an ordinary block it will return False (examples: signs, buttons, stairs, etc)
+     */
+    public boolean renderAsNormalBlock()
+    {
+        return false;
+    }
+
+    /**
+     * The type of render function that is called for this block
+     */
+    public int getRenderType()
+    {
+        return Gases.renderBlockGasPipeID;
+    }
+    
+    public int idPicked(World par1World, int par2, int par3, int par4)
+    {
+        return Gases.gasPipeAir.blockID;
     }
 }

@@ -18,6 +18,6 @@ public class DamageSourceLightning extends DamageSource
      */
     public ChatMessageComponent getDeathMessage(EntityLivingBase par1EntityLivingBase)
     {
-        return ChatMessageComponent.func_111082_b(par1EntityLivingBase.getTranslatedEntityName() + " was electrocuted.", new Object[] {par1EntityLivingBase.getTranslatedEntityName()});
+        return ChatMessageComponent.createFromTranslationWithSubstitutions(par1EntityLivingBase.getTranslatedEntityName() + " was electrocuted.", new Object[] {par1EntityLivingBase.getTranslatedEntityName()});
     }
 }

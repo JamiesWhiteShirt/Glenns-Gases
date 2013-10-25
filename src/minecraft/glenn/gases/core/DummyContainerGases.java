@@ -1,5 +1,7 @@
 package glenn.gases.core;
 
+import glenn.gases.Gases;
+
 import java.util.Arrays;
 
 import com.google.common.eventbus.EventBus;
@@ -21,7 +23,7 @@ public class DummyContainerGases extends DummyModContainer
 		ModMetadata meta = getMetadata();
 		meta.modId = "gasesCore";
 		meta.name = "Glenn's Gases Core";
-		meta.version = "1.3.2";
+		meta.version = Gases.version;
 		meta.description = "Adds gases to your Minecraft world!";
 		meta.authorList = Arrays.asList("Glenn");
 		meta.url = "http://www.minecraftforum.net/topic/1890587-/";

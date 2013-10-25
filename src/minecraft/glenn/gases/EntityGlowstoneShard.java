@@ -17,6 +17,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet70GameEvent;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -250,7 +251,7 @@ public class EntityGlowstoneShard extends Entity implements IProjectile
             {
                 EntityPlayer entityplayer = (EntityPlayer)movingobjectposition.entityHit;
 
-                if (entityplayer.capabilities.disableDamage || this.shootingEntity instanceof EntityPlayer && !((EntityPlayer)this.shootingEntity).func_96122_a(entityplayer))
+                if (entityplayer.capabilities.disableDamage || this.shootingEntity instanceof EntityPlayer && !((EntityPlayer)this.shootingEntity).canAttackPlayer(entityplayer))
                 {
                     movingobjectposition = null;
                 }
@@ -261,7 +262,7 @@ public class EntityGlowstoneShard extends Entity implements IProjectile
 
             if (movingobjectposition != null)
             {
-                if (movingobjectposition.entityHit != null)
+                if (movingobjectposition.entityHit != null & movingobjectposition.entityHit != this.shootingEntity)
                 {
                     f2 = MathHelper.sqrt_double(this.motionX * this.motionX + this.motionY * this.motionY + this.motionZ * this.motionZ);
                     int i1 = MathHelper.ceiling_double_int((double)f2 * this.damage);
@@ -279,7 +280,7 @@ public class EntityGlowstoneShard extends Entity implements IProjectile
                     }
                     else
                     {
-                        damagesource = DamageSource.generic;
+                        damagesource = (new EntityDamageSourceIndirect("arrow", this, shootingEntity)).setProjectile();
                     }
 
                     if (this.isBurning() && !(movingobjectposition.entityHit instanceof EntityEnderman))

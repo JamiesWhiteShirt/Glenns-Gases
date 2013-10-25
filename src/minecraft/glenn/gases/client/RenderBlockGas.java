@@ -193,6 +193,10 @@ public class RenderBlockGas implements ISimpleBlockRenderingHandler
         int brightness = block.getMixedBrightnessForBlock(blockAccess, i, j, k);
     	tessellator = Tessellator.instance;
     	int color = block.colorMultiplier(blockAccess, i, j, k);
+    	
+    	float red = (float)((color >> 16) & 0xFF) / 255.0F;
+    	float green = (float)((color >> 8) & 0xFF) / 255.0F;
+    	float blue = (float)(color & 0xFF) / 255.0F;
 
     	double minX = block.sideIndent(blockAccess, i - 1, j, k);
     	double maxX = 1.0D - block.sideIndent(blockAccess, i + 1, j, k);
@@ -208,9 +212,10 @@ public class RenderBlockGas implements ISimpleBlockRenderingHandler
 
     	tessellator.setBrightness(brightness);
     	//tessellator.setColorRGBA((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 128 + block.opacity * 32);
-    	tessellator.setColorRGBA((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 255);
+    	//tessellator.setColorRGBA((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 255);
     	tessellator.addTranslation((float)i, (float)j, (float)k);
-
+    	
+		tessellator.setColorOpaque_F(red * 0.9F, green * 0.9F, blue * 0.9F);
     	if(block.shouldSideBeRendered(blockAccess, i, j, k, 3))
     	{
     		sideBlockID = blockAccess.getBlockId(i, j, k - 1);
@@ -343,7 +348,8 @@ public class RenderBlockGas implements ISimpleBlockRenderingHandler
 	    		vertexAutoMap(maxX, minY, minZ, maxZ, maxY);
     		}
     	}
-    	
+
+		tessellator.setColorOpaque_F(red * 0.8F, green * 0.8F, blue * 0.8F);
     	if(block.shouldSideBeRendered(blockAccess, i, j, k, 1))
     	{
     		vertexAutoMap(maxX, minY, minZ, maxX, maxZ);
@@ -351,7 +357,8 @@ public class RenderBlockGas implements ISimpleBlockRenderingHandler
     		vertexAutoMap(minX, minY, maxZ, minX, minZ);
     		vertexAutoMap(minX, minY, minZ, minX, maxZ);
     	}
-	    
+
+		tessellator.setColorOpaque_F(red, green, blue);
     	if(block.shouldSideBeRendered(blockAccess, i, j, k, 0))
     	{
     		vertexAutoMap(maxX, maxY, maxZ, maxX, maxZ);

@@ -2,8 +2,10 @@ package glenn.gases.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -16,17 +18,55 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.tree.*;
 
 import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 
 import static org.objectweb.asm.Opcodes.*;
 
 public class EDClassTransformer implements IClassTransformer
 {
+	private FMLDeobfuscatingRemapper remapper;
+	private Map<String, String> c = new HashMap<String, String>();
+	
+	{
+		c.put("Block", "aqz");
+		c.put("BlockFire", "aoi");
+		c.put("ItemRenderer", "bfj");
+		c.put("Entity", "nn");
+		c.put("EntityLivingBase", "of");
+		c.put("ItemGlassBottle", "wo");
+		c.put("BlockFluid", "apc");
+		c.put("BlockFlowing", "apd");
+		c.put("EntityRenderer", "bfe");
+		c.put("WorldProvider", "aei");
+		c.put("World", "abw");
+		c.put("Material", "akc");
+		c.put("EntityPlayer", "uf");
+		c.put("MovingObjectPosition", "ata");
+		c.put("ItemStack", "ye");
+		c.put("Item", "yc");
+		c.put("InventoryPlayer", "ud");
+		c.put("ItemPotion", "yp");
+		c.put("EntityItem", "ss");
+		c.put("EnumMovingObjectType", "atb");
+		c.put("MathHelper", "ls");
+		c.put("DamageSource", "nb");
+		c.put("Minecraft", "atv");
+		c.put("ResourceLocation", "bjo");
+		c.put("EntityClientPlayerMP", "bdi");
+		c.put("TextureManager", "bim");
+		c.put("Tessellator", "bfq");
+		c.put("WorldClient", "bdd");
+		c.put("GuiIngame", "avj");
+	}
+	
 	@Override
 	public byte[] transform(String className, String arg1, byte[] data)
 	{
+		remapper = FMLDeobfuscatingRemapper.INSTANCE;
+		
 		byte[] newData = data;
 
-		if(className.equals("aqw"))
+		if(className.equals(c.get("Block")))
 		{
 			newData = patchClassBlock(data, true);
 		}
@@ -34,7 +74,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassBlock(data, false);
 		}
-		else if(className.equals("aof"))
+		else if(className.equals(c.get("BlockFire")))
 		{
 			newData = patchClassBlockFire(data, true);
 		}
@@ -46,7 +86,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			//newData = patchClassGuiIngame(className, data);
 		}
-		else if(className.equals("bfg"))
+		else if(className.equals(c.get("ItemRenderer")))
 		{
 			newData = patchClassItemRenderer(data, true);
 		}
@@ -54,7 +94,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassItemRenderer(data, false);
 		}
-		else if(className.equals("nm"))
+		else if(className.equals(c.get("Entity")))
 		{
 			newData = patchClassEntity(data, true);
 		}
@@ -62,7 +102,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassEntity(data, false);
 		}
-		else if(className.equals("oe"))
+		else if(className.equals(c.get("EntityLivingBase")))
 		{
 			newData = patchClassEntityLivingBase(data, true);
 		}
@@ -70,7 +110,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassEntityLivingBase(data, false);
 		}
-		else if(className.equals("wn"))
+		else if(className.equals(c.get("ItemGlassBottle")))
 		{
 			newData = patchClassItemGlassBottle(data, true);
 		}
@@ -78,7 +118,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassItemGlassBottle(data, false);
 		}
-		else if(className.equals("aoz"))
+		else if(className.equals(c.get("BlockFluid")))
 		{
 			newData = patchClassBlockFluid(data, true);
 		}
@@ -86,7 +126,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassBlockFluid(data, false);
 		}
-		else if(className.equals("apa"))
+		else if(className.equals(c.get("BlockFlowing")))
 		{
 			newData = patchClassBlockFlowing(data, true);
 		}
@@ -94,7 +134,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassBlockFlowing(data, false);
 		}
-		else if(className.equals("bfb"))
+		else if(className.equals(c.get("EntityRenderer")))
 		{
 			newData = patchClassEntityRenderer(data, true);
 		}
@@ -106,7 +146,7 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = dummyTransformFunc(data, false);
 		}
-		else if(className.equals("bfb"))
+		else if(className.equals(c.get("EntityRenderer")))
 		{
 			newData = dummyTransformFunc(data, true);
 		}*/
@@ -161,9 +201,9 @@ public class EDClassTransformer implements IClassTransformer
 		ClassReader classReader = new ClassReader(data);
 		classReader.accept(classNode, 0);
 		
-		String classEntityRenderer = obfuscated ? "bfb" : "net/minecraft/client/renderer/EntityRenderer";
-		String classEntityLivingBase = obfuscated ? "oe" : "net/minecraft/entity/EntityLivingBase";
-		String classWorldProvider = obfuscated ? "aeh" : "net/minecraft/world/WorldProvider";
+		String classEntityRenderer = obfuscated ? c.get("EntityRenderer") : "net/minecraft/client/renderer/EntityRenderer";
+		String classEntityLivingBase = obfuscated ? c.get("EntityLivingBase") : "net/minecraft/entity/EntityLivingBase";
+		String classWorldProvider = obfuscated ? c.get("WorldProvider") : "net/minecraft/world/WorldProvider";
 		
 		String methodSetupFog = obfuscated ? "a" : "setupFog";
 		String methodUpdateFogColor = obfuscated ? "i" : "updateFogColor";
@@ -236,8 +276,8 @@ public class EDClassTransformer implements IClassTransformer
 	
 	public byte[] patchClassBlockFlowing(byte[] data, boolean obfuscated)
 	{
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
+		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
 		
 		String methodUpdateTick = obfuscated ? "a" : "updateTick";
 		String methodSetBlock = obfuscated ? "c" : "setBlock";
@@ -278,7 +318,7 @@ public class EDClassTransformer implements IClassTransformer
 									newInstructions.add(new VarInsnNode(ILOAD, 2));
 									newInstructions.add(new VarInsnNode(ILOAD, 3));
 									newInstructions.add(new VarInsnNode(ILOAD, 4));
-									newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSteam", "L" + classBlock + ";"));
+									newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSteam", "Lglenn/gases/BlockGas;"));
 									newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockID, "I"));
 									newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
 								}
@@ -298,8 +338,8 @@ public class EDClassTransformer implements IClassTransformer
 	
 	public byte[] patchClassBlockFluid(byte[] data, boolean obfuscated)
 	{
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
+		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
 		
 		String methodCheckForHarden = obfuscated ? "k" : "checkForHarden";
 		String methodSetBlock = obfuscated ? "c" : "setBlock";
@@ -338,7 +378,7 @@ public class EDClassTransformer implements IClassTransformer
 								newInstructions.add(new InsnNode(ICONST_1));
 								newInstructions.add(new InsnNode(IADD));
 								newInstructions.add(new VarInsnNode(ILOAD, 4));
-								newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSteam", "L" + classBlock + ";"));
+								newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSteam", "Lglenn/gases/BlockGas;"));
 								newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockID, "I"));
 								newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
 								newInstructions.add(new InsnNode(POP));
@@ -358,18 +398,18 @@ public class EDClassTransformer implements IClassTransformer
 
 	public byte[] patchClassItemGlassBottle(byte[] data, boolean obfuscated)
 	{
-		String classMaterial = obfuscated ? "ajz" : "net/minecraft/block/material/Material";
-		String classItemGlassBottle = obfuscated ? "wn" : "net/minecraft/item/ItemGlassBottle";
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
-		String classEntityPlayer = obfuscated ? "ue" : "net/minecraft/entity/player/EntityPlayer";
-		String classMovingObjectPosition = obfuscated ? "asx" : "net/minecraft/util/MovingObjectPosition";
-		String classItemStack = obfuscated ? "yd" : "net/minecraft/item/ItemStack";
-		String classItem = obfuscated ? "yb" : "net/minecraft/item/Item";
-		String classInventoryPlayer = obfuscated ? "uc" : "net/minecraft/entity/player/InventoryPlayer";
-		String classItemPotion = obfuscated ? "yo" : "net/minecraft/item/ItemPotion";
-		String classEntityItem = obfuscated ? "sr" : "net/minecraft/entity/item/EntityItem";
+		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
+		String classItemGlassBottle = obfuscated ? c.get("ItemGlassBottle") : "net/minecraft/item/ItemGlassBottle";
+		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
+		String classEntityPlayer = obfuscated ? c.get("EntityPlayer") : "net/minecraft/entity/player/EntityPlayer";
+		String classMovingObjectPosition = obfuscated ? c.get("MovingObjectPosition") : "net/minecraft/util/MovingObjectPosition";
+		String classItemStack = obfuscated ? c.get("ItemStack") : "net/minecraft/item/ItemStack";
+		String classItem = obfuscated ? c.get("Item") : "net/minecraft/item/Item";
+		String classInventoryPlayer = obfuscated ? c.get("InventoryPlayer") : "net/minecraft/entity/player/InventoryPlayer";
+		String classItemPotion = obfuscated ? c.get("ItemPotion") : "net/minecraft/item/ItemPotion";
+		String classEntityItem = obfuscated ? c.get("EntityItem") : "net/minecraft/entity/item/EntityItem";
 
-		String enumMovingObjectType = obfuscated ? "asy" : "net/minecraft/util/EnumMovingObjectType";
+		String enumMovingObjectType = obfuscated ? c.get("EnumMovingObjectType") : "net/minecraft/util/EnumMovingObjectType";
 
 		String methodOnItemRightClick = obfuscated ? "a" : "onItemRightClick";
 		String methodGetMovingObjectPositionFromPlayer = obfuscated ? "a" : "getMovingObjectPositionFromPlayer";
@@ -536,6 +576,13 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMaterial, "(III)L" + classMaterial + ";"));
 				newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
 				newInstructions.add(new JumpInsnNode(IF_ACMPNE, l4));
+				newInstructions.add(new VarInsnNode(ALOAD, 2));
+				newInstructions.add(new VarInsnNode(ILOAD, 5));
+				newInstructions.add(new VarInsnNode(ILOAD, 6));
+				newInstructions.add(new VarInsnNode(ILOAD, 7));
+				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
+				newInstructions.add(new InsnNode(ACONST_NULL));
+				newInstructions.add(new JumpInsnNode(IF_ACMPEQ, l4));
 				LabelNode l19 = new LabelNode();
 				newInstructions.add(l19);
 				newInstructions.add(new VarInsnNode(ALOAD, 1));
@@ -552,12 +599,11 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new JumpInsnNode(IFGT, l21));
 				LabelNode l22 = new LabelNode();
 				newInstructions.add(l22);
-				//newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(new VarInsnNode(ALOAD, 2));
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
 				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/core/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
+				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
 				newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(l21);
 				newInstructions.add(new FrameNode(F_SAME, 0, null, 0, null));
@@ -567,7 +613,7 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
 				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/core/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
+				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classInventoryPlayer, methodAddItemStackToInventory, "(L" + classItemStack + ";)Z"));
 				LabelNode l23 = new LabelNode();
 				newInstructions.add(new JumpInsnNode(IFNE, l23));
@@ -578,7 +624,7 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
 				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/core/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
+				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityPlayer, methodDropPlayerItem, "(L" + classItemStack + ";)L" + classEntityItem + ";"));
 				newInstructions.add(new InsnNode(POP));
 				newInstructions.add(l23);
@@ -591,7 +637,7 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
 				newInstructions.add(new InsnNode(POP));
 				newInstructions.add(l4);
-				newInstructions.add(new FrameNode(F_CHOP,3, null, 0, null));
+				newInstructions.add(new FrameNode(F_CHOP, 3, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 1));
 				newInstructions.add(new InsnNode(ARETURN));
 
@@ -606,21 +652,21 @@ public class EDClassTransformer implements IClassTransformer
 
 	public byte[] patchClassEntityLivingBase(byte[] data, boolean obfuscated)
 	{
-		String classEntityLivingBase = obfuscated ? "oe" : "net/minecraft/entity/EntityLivingBase";
-		String classMaterial = obfuscated ? "ajz" : "net/minecraft/block/material/Material";
-		String classMathHelper = obfuscated ? "lr" : "net/minecraft/util/MathHelper";
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
-		String classDamageSource = obfuscated ? "na" : "net/minecraft/util/DamageSource";
+		String classEntityLivingBase = obfuscated ? c.get("EntityLivingBase") : "net/minecraft/entity/EntityLivingBase";
+		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
+		String classMathHelper = obfuscated ? c.get("MathHelper") : "net/minecraft/util/MathHelper";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
+		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
+		String classDamageSource = obfuscated ? c.get("DamageSource") : "net/minecraft/util/DamageSource";
 
-		String methodOnEntityUpdate = obfuscated ? "x" : "onEntityUpdate";
+		String methodOnEntityUpdate = obfuscated ? "y" : "onEntityUpdate";
 		String methodIsInsideOfMaterial = obfuscated ? "a" : "isInsideOfMaterial";
 		String methodGetEyeHeight = obfuscated ? "f" : "getEyeHeight";
 		String methodFloor_double = obfuscated ? "c" : "floor_double";
 		String methodFloor_float = obfuscated ? "d" : "floor_float";
 		String methodGetBlockId = obfuscated ? "a" : "getBlockId";
 		String methodAttackEntityFrom = obfuscated ? "a" : "attackEntityFrom";
-		String methodUpdatePotionEffects = obfuscated ? "aI" : "updatePotionEffects";
+		String methodUpdatePotionEffects = obfuscated ? "aJ" : "updatePotionEffects";
 		
 		String fieldPosX = obfuscated ? "u" : "posX";
 		String fieldPosY = obfuscated ? "v" : "posY";
@@ -760,13 +806,15 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l9 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l9));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "blindnessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "blindnessRate", "I"));
 			method.instructions.add(new JumpInsnNode(IFLT, l9));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "blindnessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "blindnessRate", "I"));
 			method.instructions.add(new InsnNode(IADD));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			LabelNode l12 = new LabelNode();
@@ -785,13 +833,15 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l13 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l13));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "suffocationRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "suffocationRate", "I"));
 			method.instructions.add(new JumpInsnNode(IFLT, l13));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "suffocationRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "suffocationRate", "I"));
 			method.instructions.add(new InsnNode(IADD));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			LabelNode l16 = new LabelNode();
@@ -810,13 +860,15 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l17 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l17));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "slownessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "slownessRate", "I"));
 			method.instructions.add(new JumpInsnNode(IFLT, l17));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "slownessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "slownessRate", "I"));
 			method.instructions.add(new InsnNode(IADD));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			LabelNode l20 = new LabelNode();
@@ -905,7 +957,7 @@ public class EDClassTransformer implements IClassTransformer
 			
 			method.localVariables.add(new LocalVariableNode("this", "L" + classEntityLivingBase + ";", null, l0, l37, 0));
 			method.localVariables.add(new LocalVariableNode("isInsideOfGas", "Z", null, l1, l37, 1));
-			method.localVariables.add(new LocalVariableNode("block", "Lglenn/gases/BlockGas;", null, l2, l37, 2));
+			method.localVariables.add(new LocalVariableNode(c.get("Block"), "Lglenn/gases/BlockGas;", null, l2, l37, 2));
 			method.localVariables.add(new LocalVariableNode("d0", "D", null, l5, l3, 3));
 			method.localVariables.add(new LocalVariableNode("i", "I", null, l6, l3, 5));
 			method.localVariables.add(new LocalVariableNode("j", "I", null, l7, l3, 6));
@@ -923,11 +975,11 @@ public class EDClassTransformer implements IClassTransformer
 
 	public byte[] patchClassEntity(byte[] data, boolean obfuscated)
 	{
-		String classMinecraft = obfuscated ? "ats" : "net/minecraft/client/Minecraft";
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
-		String classEntity = obfuscated ? "nm" : "net/minecraft/entity/Entity";
-		String classMaterial = obfuscated ? "ajz" : "net/minecraft/block/material/Material";
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
+		String classMinecraft = obfuscated ? c.get("Minecraft") : "net/minecraft/client/Minecraft";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
+		String classEntity = obfuscated ? c.get("Entity") : "net/minecraft/entity/Entity";
+		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
+		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
 
 		String methodIsInsideOfMaterial = obfuscated ? "a" : "isInsideOfMaterial";
 		String methodGetBlockMetadata = obfuscated ? "h" : "getBlockMetadata";
@@ -1022,16 +1074,16 @@ public class EDClassTransformer implements IClassTransformer
 
 	public byte[] patchClassItemRenderer(byte[] data, boolean obfuscated)
 	{
-		String classResourceLocation = obfuscated ? "bjl" : "net/minecraft/util/ResourceLocation";
-		String classItemRenderer = obfuscated ? "bfg" : "net/minecraft/client/renderer/ItemRenderer";
-		String classMinecraft = obfuscated ? "ats" : "net/minecraft/client/Minecraft";
-		String classEntityClientPlayerMP = obfuscated ? "bdf" : "net/minecraft/client/entity/EntityClientPlayerMP";
-		String classMaterial = obfuscated ? "ajz" : "net/minecraft/block/material/Material";
-		String classTextureManager = obfuscated ? "bij" : "net/minecraft/client/renderer/texture/TextureManager";
-		String classTessellator = obfuscated ? "bfn" : "net/minecraft/client/renderer/Tessellator";
-		String classMathHelper = obfuscated ? "lr" : "net/minecraft/util/MathHelper";
-		String classWorldClient = obfuscated ? "bda" : "net/minecraft/client/multiplayer/WorldClient";
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
+		String classResourceLocation = obfuscated ? c.get("ResourceLocation") : "net/minecraft/util/ResourceLocation";
+		String classItemRenderer = obfuscated ? c.get("ItemRenderer") : "net/minecraft/client/renderer/ItemRenderer";
+		String classMinecraft = obfuscated ? c.get("Minecraft") : "net/minecraft/client/Minecraft";
+		String classEntityClientPlayerMP = obfuscated ? c.get("EntityClientPlayerMP") : "net/minecraft/client/entity/EntityClientPlayerMP";
+		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
+		String classTextureManager = obfuscated ? c.get("TextureManager") : "net/minecraft/client/renderer/texture/TextureManager";
+		String classTessellator = obfuscated ? c.get("Tessellator") : "net/minecraft/client/renderer/Tessellator";
+		String classMathHelper = obfuscated ? c.get("MathHelper") : "net/minecraft/util/MathHelper";
+		String classWorldClient = obfuscated ? c.get("WorldClient") : "net/minecraft/client/multiplayer/WorldClient";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
 
 		String methodRenderOverlays = obfuscated ? "b" : "renderOverlays";
 		String methodRenderWarpedTextureOverlay = obfuscated ? "c" : "renderWarpedTextureOverlay";
@@ -1043,8 +1095,8 @@ public class EDClassTransformer implements IClassTransformer
 		String methodStartDrawingQuads = obfuscated ? "b" : "startDrawingQuads";
 		String methodAddVertexWithUV = obfuscated ? "a" : "addVertexWithUV";
 		String methodDraw = obfuscated ? "a" : "draw";
-		String methodFunc_110434_K = obfuscated ? "J" : "func_110434_K";
-		String methodFunc_110577_a = obfuscated ? "a" : "func_110577_a";
+		String methodGetTextureManager = obfuscated ? "J" : "getTextureManager";
+		String methodBindTexture = obfuscated ? "a" : "bindTexture";
 
 		String fieldMc = obfuscated ? "e" : "mc";
 		String fieldThePlayer = obfuscated ? "h" : "thePlayer";
@@ -1144,9 +1196,9 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitLineNumber(655, l0);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
-			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classMinecraft, methodFunc_110434_K, "()L" + classTextureManager+ ";");
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classMinecraft, methodGetTextureManager, "()L" + classTextureManager+ ";");
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classItemRenderer, "gasOverlay", "L" + classResourceLocation + ";");
-			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodFunc_110577_a, "(L" + classResourceLocation + ";)V");
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");
 			Label l1 = new Label();
 			renderGasOverlay.visitLabel(l1);
 			renderGasOverlay.visitLineNumber(656, l1);
@@ -1225,7 +1277,8 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ILOAD, 7);
 			renderGasOverlay.visitInsn(AALOAD);
 			renderGasOverlay.visitTypeInsn(CHECKCAST, "glenn/gases/BlockGas");
-			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gases/BlockGas", "color", "I");
+			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;");
+			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gases/GasType", "color", "I");
 			renderGasOverlay.visitVarInsn(ISTORE, 8);
 			Label l10 = new Label();
 			renderGasOverlay.visitLabel(l10);
@@ -1523,10 +1576,10 @@ public class EDClassTransformer implements IClassTransformer
 				
 				
 				String classGuiIngameForge = "net/minecraftforge/client/GuiIngameForge";
-				String classGuiIngame = obfuscated ? "avg" : "net/minecraft/client/gui/GuiIngame";
-				String classMinecraft = obfuscated ? "ats" : "net/minecraft/client/Minecraft";
-				String classEntityClientPlayerMP = obfuscated ? "bdf" : "net/minecraft/client/entity/EntityClientPlayerMP";
-				String classMaterial = obfuscated ? "ajz" : "net/minecraft/block/material/Material";
+				String classGuiIngame = obfuscated ? c.get("GuiIngame") : "net/minecraft/client/gui/GuiIngame";
+				String classMinecraft = obfuscated ? c.get("Minecraft") : "net/minecraft/client/Minecraft";
+				String classEntityClientPlayerMP = obfuscated ? c.get("EntityClientPlayerMP") : "net/minecraft/client/entity/EntityClientPlayerMP";
+				String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
 
 				String methodIsInsideOfMaterial = obfuscated ? "a" : "isInsideOfMaterial";
 
@@ -1565,8 +1618,8 @@ public class EDClassTransformer implements IClassTransformer
 
 	public byte[] patchClassBlockFire(byte[] data, boolean obfuscated)
 	{
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
+		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
 
 		String methodTryToCatchBlockOnFire = "tryToCatchBlockOnFire";
 		String methodSetBlockToAir = obfuscated ? "i" : "setBlockToAir";
@@ -1598,7 +1651,7 @@ public class EDClassTransformer implements IClassTransformer
 							invokeInstruction.name = methodSetBlock;
 							invokeInstruction.desc = "(IIIIII)Z";
 
-							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSmoke", "L" + classBlock + ";"));
+							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSmoke", "Lglenn/gases/BlockGas;"));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockID, "I"));
 							newInstructions.add(new IntInsnNode(BIPUSH, 7));
 							newInstructions.add(new InsnNode(ICONST_3));

@@ -23,7 +23,7 @@ public abstract class Reaction
 	 * Gets the delay of the reaction. If the delay is -1, it will happen at the speed of the gas flow.
 	 * @return
 	 */
-	public static int getDelay()
+	public int getDelay(World world, int block1X, int block1Y, int block1Z, int block2X, int block2Y, int block2Z)
 	{
 		return -1;
 	}

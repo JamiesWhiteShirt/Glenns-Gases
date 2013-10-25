@@ -9,9 +9,9 @@ import net.minecraft.world.World;
 
 public class BlockGasElectric extends BlockGas
 {
-	public BlockGasElectric(int id, int color, int opacity, int density, Combustibility combustibility)
+	public BlockGasElectric(int id)
 	{
-		super(id, color, opacity, density, combustibility);
+		super(id);
 	}
 	
 	public void updateTick(World par1World, int par2, int par3, int par4, Random par5Random)

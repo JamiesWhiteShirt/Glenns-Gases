@@ -88,7 +88,8 @@ public class WorldGenGas extends WorldGenerator
     
     protected boolean isPlacementValid(World world, int x, int y, int z)
     {
-    	if(world.getBlockId(x, y, z) != this.field_94523_c)
+        Block block = Block.blocksList[world.getBlockId(x, y, z)];
+    	if(block != null && !block.isGenMineableReplaceable(world, x, y, z, this.field_94523_c))
     	{
     		return false;
     	}
