@@ -3,7 +3,10 @@ package glenn.gases;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 
 public class GasType
 {
@@ -25,13 +28,10 @@ public class GasType
 	public int suffocationRate;
 	public int slownessRate;
 	
-	private ItemStack bottledItem;
-	
-	public GasType(BlockGas gasBlock, BlockGasPipe gasPipe, ItemStack bottledItem, int gasIndex, String name, int color, int opacity, int density)
+	public GasType(BlockGas gasBlock, BlockGasPipe gasPipe, int gasIndex, String name, int color, int opacity, int density)
 	{
 		this.gasBlock = gasBlock;
 		this.gasPipe = gasPipe;
-		this.bottledItem = bottledItem;
 		
 		this.gasIndex = gasIndex;
 		this.name = name;
@@ -98,13 +98,11 @@ public class GasType
 	
 	public ItemStack getBottledItem()
 	{
-		if(bottledItem != null)
-		{
-			return bottledItem.copy();
-		}
-		else
-		{
-			return null;
-		}
+		return new ItemStack(Gases.gasBottle, 1, gasIndex);
+	}
+	
+	public void onBreathed(EntityLivingBase entity)
+	{
+		entity.attackEntityFrom(DamageSource.generic, 0.5F);
 	}
 }

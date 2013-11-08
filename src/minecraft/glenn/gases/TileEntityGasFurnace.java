@@ -41,8 +41,8 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
     public int currentItemBurnTime;
 
     /** The number of ticks that the current item has been cooking for */
-    public float furnaceCookTime = 0.0F;
-    public float furnaceCookSpeed = 0.5F;
+    public int furnaceCookTime = 0;
+    public int furnaceCookSpeed = 500;
     private String field_94130_e;
 
     /**
@@ -172,8 +172,8 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
         }
 
         this.furnaceBurnTime = par1NBTTagCompound.getShort("BurnTime");
-        this.furnaceCookTime = par1NBTTagCompound.getFloat("CookTime");
-        this.furnaceCookSpeed = par1NBTTagCompound.getFloat("CookSpeed");
+        this.furnaceCookTime = par1NBTTagCompound.getShort("CookTime");
+        this.furnaceCookSpeed = par1NBTTagCompound.getShort("CookSpeed");
         this.currentItemBurnTime = getItemBurnTime(this.furnaceItemStacks[1]);
 
         if (par1NBTTagCompound.hasKey("CustomName"))
@@ -189,8 +189,8 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
     {
         super.writeToNBT(par1NBTTagCompound);
         par1NBTTagCompound.setShort("BurnTime", (short)this.furnaceBurnTime);
-        par1NBTTagCompound.setFloat("CookTime", this.furnaceCookTime);
-        par1NBTTagCompound.setFloat("CookSpeed", this.furnaceCookSpeed);
+        par1NBTTagCompound.setShort("CookTime", (short)this.furnaceCookTime);
+        par1NBTTagCompound.setShort("CookSpeed", (short)this.furnaceCookSpeed);
         NBTTagList nbttaglist = new NBTTagList();
 
         for (int i = 0; i < this.furnaceItemStacks.length; ++i)
@@ -229,7 +229,7 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
      */
     public int getCookProgressScaled(int par1)
     {
-        return (int)(this.furnaceCookTime * par1 / 200);
+        return this.furnaceCookTime * par1 / (200 * 1000);
     }
 
     /**
@@ -246,17 +246,17 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
      */
     public void updateEntity()
     {
-        boolean flag = this.furnaceBurnTime > 0;
+        boolean flag = this.furnaceCookSpeed > 500;
         boolean flag1 = false;
 
-        if (this.furnaceBurnTime > 0)
+        if (this.furnaceBurnTime > 0 && this.canSmelt())
         {
             --this.furnaceBurnTime;
         }
 
         if (!this.worldObj.isRemote)
         {
-            if (this.furnaceBurnTime == 0 && this.canSmelt())
+            /*if (this.furnaceBurnTime == 0 && this.canSmelt())
             {
                 this.currentItemBurnTime = this.furnaceBurnTime = getItemBurnTime(this.furnaceItemStacks[1]);
 
@@ -274,14 +274,14 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
                         }
                     }
                 }
-            }
+            }*/
 
             if (this.isBurning() && this.canSmelt())
             {
                 this.furnaceCookTime += this.furnaceCookSpeed;
-                this.furnaceCookSpeed += 0.005F;
+                this.furnaceCookSpeed += Gases.gasFurnaceHeatingSpeed;
 
-                if (this.furnaceCookTime >= 200F)
+                if (this.furnaceCookTime >= 200 * 1000)
                 {
                     this.furnaceCookTime = 0;
                     this.smeltItem();
@@ -290,24 +290,24 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
             }
             else
             {
-                this.furnaceCookTime = 0F;
-                this.furnaceCookSpeed -= 0.005F;
-            }
-            
-            if(this.furnaceCookSpeed < 0.5F)
-            {
-            	this.furnaceCookSpeed = 0.5F;
-            }
-            else if(this.furnaceCookSpeed > 4.5F)
-            {
-            	this.furnaceCookSpeed = 4.5F;
+                this.furnaceCookTime = 0;
+                this.furnaceCookSpeed -= Gases.gasFurnaceHeatingSpeed;
             }
 
-            if (flag != this.furnaceBurnTime > 0)
+            if (flag != this.furnaceCookSpeed > 500)
             {
                 flag1 = true;
-                BlockGasFurnace.updateFurnaceBlockState(this.furnaceBurnTime > 0, this.worldObj, this.xCoord, this.yCoord, this.zCoord);
+                BlockGasFurnace.updateFurnaceBlockState(this.furnaceCookSpeed > 500, this.worldObj, this.xCoord, this.yCoord, this.zCoord);
             }
+        }
+        
+        if(this.furnaceCookSpeed < 500)
+        {
+        	this.furnaceCookSpeed = 500;
+        }
+        else if(this.furnaceCookSpeed > 4500)
+        {
+        	this.furnaceCookSpeed = 4500;
         }
 
         if (flag1)
@@ -319,7 +319,7 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
     /**
      * Returns true if the furnace can smelt an item, i.e. has a source item, destination stack isn't full, etc.
      */
-    private boolean canSmelt()
+    public boolean canSmelt()
     {
         if (this.furnaceItemStacks[0] == null)
         {

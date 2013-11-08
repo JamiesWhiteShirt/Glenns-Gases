@@ -20,7 +20,7 @@ import net.minecraft.util.Icon;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-public class BlockGasFurnace extends BlockContainer implements GasReceptor
+public class BlockGasFurnace extends BlockContainer implements IGasReceptor
 {
     /**
      * Is the random generator used by furnace to drop the inventory contents in random directions.
@@ -42,7 +42,7 @@ public class BlockGasFurnace extends BlockContainer implements GasReceptor
 
     protected BlockGasFurnace(int par1, boolean par2)
     {
-        super(par1, Material.rock);
+        super(par1, Material.iron);
         this.isActive = par2;
     }
 
@@ -181,8 +181,10 @@ public class BlockGasFurnace extends BlockContainer implements GasReceptor
      */
     public void randomDisplayTick(World par1World, int par2, int par3, int par4, Random par5Random)
     {
-        if (this.isActive)
+        /*if (this.isActive)
         {
+    		TileEntityGasFurnace gasFurnace = (TileEntityGasFurnace)par1World.getBlockTileEntity(par2, par3, par4);
+    		
             int l = par1World.getBlockMetadata(par2, par3, par4);
             float f = (float)par2 + 0.5F;
             float f1 = (float)par3 + 0.0F + par5Random.nextFloat() * 6.0F / 16.0F;
@@ -210,7 +212,7 @@ public class BlockGasFurnace extends BlockContainer implements GasReceptor
                 par1World.spawnParticle("smoke", (double)(f + f4), (double)f1, (double)(f2 + f3), 0.0D, 0.0D, 0.0D);
                 par1World.spawnParticle("flame", (double)(f + f4), (double)f1, (double)(f2 + f3), 0.0D, 0.0D, 0.0D);
             }
-        }
+        }*/
     }
 
     /**
@@ -342,7 +344,12 @@ public class BlockGasFurnace extends BlockContainer implements GasReceptor
 	public boolean receiveGas(World world, int x, int y, int z, int side, GasType gasType)
 	{
 		TileEntityGasFurnace gasFurnace = (TileEntityGasFurnace)world.getBlockTileEntity(x, y, z);
-		gasFurnace.furnaceBurnTime += 200;
-		return true;
+		if(gasFurnace.furnaceBurnTime < 100 * gasType.combustibility.burnRate)
+		{
+			gasFurnace.furnaceBurnTime += 100 * gasType.combustibility.burnRate;
+			return true;
+		}
+		
+		return false;
 	}
 }

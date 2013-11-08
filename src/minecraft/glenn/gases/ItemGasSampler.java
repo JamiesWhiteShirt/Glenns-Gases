@@ -7,6 +7,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,6 +30,7 @@ public class ItemGasSampler extends Item
 	{
 		super(par1);
 		this.excludes = excludes;
+        this.setHasSubtypes(true);
 	}
 	
 	public String getItemDisplayName(ItemStack par1ItemStack)
@@ -38,19 +40,19 @@ public class ItemGasSampler extends Item
 		{
 			s = " of " + GasType.gasTypes[par1ItemStack.getItemDamage()].name;
 		}
-		return StatCollector.translateToLocal("item.sampler" + (excludes ? "Exluder" : "Includer") + ".name").trim() + s;
+		return (excludes ? "Excluding" : "Including") + " Sampler" + s;
     }
 	
 	/**
      * Called whenever this item is equipped and the right mouse button is pressed. Args: itemStack, world, entityPlayer
      */
-    public ItemStack onItemRightClick(ItemStack par1ItemStack, World par2World, EntityPlayer par3EntityPlayer)
+    public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer)
     {
-        MovingObjectPosition movingobjectposition = this.getMovingObjectPositionFromPlayer(par2World, par3EntityPlayer, true);
+        MovingObjectPosition movingobjectposition = this.getMovingObjectPositionFromPlayer(world, entityPlayer, true);
 
         if(movingobjectposition == null)
         {
-            return par1ItemStack;
+            return itemStack;
         }
         else
         {
@@ -59,22 +61,25 @@ public class ItemGasSampler extends Item
                 int i = movingobjectposition.blockX;
                 int j = movingobjectposition.blockY;
                 int k = movingobjectposition.blockZ;
-                Block block = Block.blocksList[par2World.getBlockId(i, j, k)];
+                Block block = Block.blocksList[world.getBlockId(i, j, k)];
                 
-                if(block instanceof BlockGas)
+                if(ISample.class.isAssignableFrom(block.getClass()))
                 {
-                	par1ItemStack.setItemDamage(((BlockGas)block).type.gasIndex);
-                }
-                else if(block instanceof BlockPump & par1ItemStack.getItemDamage() > 0)
-                {
-                	TileEntityPump tileEntity = (TileEntityPump)par2World.getBlockTileEntity(i, j, k);
+                	ISample sample = (ISample)block;
+                	GasType newType = sample.sampleInteraction(world, i, j, k, GasType.gasTypes[itemStack.getItemDamage()], excludes);
                 	
-                	tileEntity.excludes = this.excludes;
-                	tileEntity.filterType = GasType.gasTypes[par1ItemStack.getItemDamage()];
+                	if(newType != null)
+                	{
+                		itemStack.setItemDamage(newType.gasIndex);
+                	}
+                	else
+                	{
+                		itemStack.setItemDamage(0);
+                	}
                 }
             }
             
-            return par1ItemStack;
+            return itemStack;
         }
     }
 	
@@ -127,5 +132,21 @@ public class ItemGasSampler extends Item
     public Icon getIconFromDamage(int par1)
     {
         return this.icon;
+    }
+	
+	@SideOnly(Side.CLIENT)
+
+    /**
+     * returns a list of items with the same ID, but different meta (eg: dye returns 16 items)
+     */
+    public void getSubItems(int par1, CreativeTabs par2CreativeTabs, List par3List)
+    {
+        for (int i = 0; i < GasType.gasTypes.length; i++)
+        {
+        	if(GasType.gasTypes[i] != null)
+        	{
+        		par3List.add(new ItemStack(par1, 1, i));
+        	}
+        }
     }
 }

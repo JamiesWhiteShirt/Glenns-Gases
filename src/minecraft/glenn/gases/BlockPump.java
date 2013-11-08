@@ -14,10 +14,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
-public class BlockPump extends Block implements GasReceptor, ITileEntityProvider
+public class BlockPump extends Block implements IGasReceptor, ITileEntityProvider, ISample
 {
 	private static final int[] reindex = new int[]{
-		0, 1, 5, 4, 3, 2
+		1, 0, 5, 4, 3, 2
 	};
 	
 	protected Icon side;
@@ -25,7 +25,7 @@ public class BlockPump extends Block implements GasReceptor, ITileEntityProvider
 	
 	public BlockPump(int blockID)
 	{
-		super(blockID, Material.circuits);
+		super(blockID, Material.iron);
 	}
 	
 	/**
@@ -111,5 +111,15 @@ public class BlockPump extends Block implements GasReceptor, ITileEntityProvider
 	public TileEntity createNewTileEntity(World world)
 	{
 	   return new TileEntityPump();
+	}
+
+	@Override
+	public GasType sampleInteraction(World world, int x, int y, int z, GasType in, boolean excludes)
+	{
+		TileEntityPump tileEntity = (TileEntityPump)world.getBlockTileEntity(x, y, z);
+    	tileEntity.excludes = excludes;
+    	tileEntity.filterType = in;
+    	
+		return in;
 	}
 }

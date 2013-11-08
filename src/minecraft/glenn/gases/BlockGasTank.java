@@ -6,13 +6,16 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockGasTank extends Block implements GasSource, GasReceptor, ITileEntityProvider
+public class BlockGasTank extends Block implements IGasSource, IGasReceptor, ITileEntityProvider, ISample
 {
 	public Icon side;
 	public Icon top;
@@ -20,7 +23,7 @@ public class BlockGasTank extends Block implements GasSource, GasReceptor, ITile
 	
 	public BlockGasTank(int blockID)
 	{
-		super(blockID, Material.circuits);
+		super(blockID, Material.iron);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -78,5 +81,74 @@ public class BlockGasTank extends Block implements GasSource, GasReceptor, ITile
     public int getRenderType()
     {
         return Gases.renderBlockTankID;
+    }
+
+	@Override
+	public GasType sampleInteraction(World world, int x, int y, int z, GasType in, boolean excludes)
+	{
+		TileEntityTank tileEntity = (TileEntityTank)world.getBlockTileEntity(x, y, z);
+		return tileEntity.containedType;
+	}
+	
+	/**
+     * Called upon block activation (right click on the block.)
+     */
+    public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int par6, float par7, float par8, float par9)
+    {
+		TileEntityTank tileEntity = (TileEntityTank)world.getBlockTileEntity(x, y, z);
+		GasType containedType = tileEntity.containedType;
+    	ItemStack inUse = entityPlayer.getCurrentEquippedItem();
+    	boolean consumed = false;
+    	ItemStack newItem = null;
+    	
+    	if(inUse != null)
+    	{
+    		if(inUse.itemID == Item.glassBottle.itemID)
+        	{
+        		if(tileEntity.decrement())
+        		{
+        			consumed = true;
+        			newItem = containedType.getBottledItem();
+        		}
+        	}
+        	else if(inUse.itemID == Gases.gasBottle.itemID)
+        	{
+        		GasType heldType = ((ItemGasBottle)Gases.gasBottle).getGasType(inUse);
+        		if(tileEntity.increment(heldType))
+        		{
+        			consumed = true;
+        			newItem = new ItemStack(Item.glassBottle);
+        		}
+        	}
+    	}
+    	
+    	boolean addNewItem = newItem != null;
+    	
+    	if(consumed)
+    	{
+    		inUse.stackSize--;
+			if(inUse.stackSize <= 0 & addNewItem)
+			{
+				inUse.itemID = newItem.itemID;
+				inUse.setItemDamage(newItem.getItemDamage());
+				inUse.stackSize = newItem.stackSize;
+				addNewItem = false;
+			}
+    	}
+    	
+    	if(addNewItem)
+    	{
+			if(!entityPlayer.inventory.addItemStackToInventory(newItem))
+			{
+				entityPlayer.dropPlayerItem(newItem);
+			}
+    	}
+    	
+    	if(newItem == null | inUse == null)
+    	{
+    		return false;
+    	}
+    	
+    	return consumed & newItem.itemID != inUse.itemID & newItem.getItemDamage() != inUse.getItemDamage();
     }
 }

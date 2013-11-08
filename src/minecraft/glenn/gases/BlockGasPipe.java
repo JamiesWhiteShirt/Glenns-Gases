@@ -6,14 +6,18 @@ import glenn.gases.util.PipeBranch;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockGasPipe extends Block implements GasReceptor
+public class BlockGasPipe extends Block implements IGasReceptor
 {
 	private static final int[] xDirection = new int[]{
 		0, 0, 1, -1, 0, 0
@@ -42,49 +46,132 @@ public class BlockGasPipe extends Block implements GasReceptor
 	 */
 	public BlockGasPipe(int blockID)
 	{
-		super(blockID, Material.circuits);
+		super(blockID, Material.iron);
 		
 		this.setHardness(1.0F);
 		this.setTextureName("gases:pipe");
 	}
 	
+	public boolean[] getRenderConnectionArray(IBlockAccess blockAccess, int x, int y, int z)
+	{
+		final boolean[] sidePipe = new boolean[6];
+		final boolean[] renderConnections = new boolean[6];
+        for(int i = 0; i < 6; i++)
+		{
+			int x1 = x + xDirection[i];
+			int y1 = y + yDirection[i];
+			int z1 = z + zDirection[i];
+			
+			int directionBlockID = blockAccess.getBlockId(x1, y1, z1);
+			if(directionBlockID != 0)
+			{
+				Block directionBlock = Block.blocksList[directionBlockID];
+				sidePipe[i] = directionBlock instanceof BlockGasPipe || IGasReceptor.class.isAssignableFrom(directionBlock.getClass());
+			}
+		}
+        
+        boolean collectionAll = sidePipe[0] || sidePipe[1] || sidePipe[2] || sidePipe[3] || sidePipe[4] || sidePipe[5];
+		boolean collectionY = sidePipe[2] || sidePipe[3] || sidePipe[4] || sidePipe[5];
+		boolean collectionX = sidePipe[0] || sidePipe[1] || sidePipe[4] || sidePipe[5];
+		boolean collectionZ = sidePipe[0] || sidePipe[1] || sidePipe[2] || sidePipe[3];
+        
+    	renderConnections[0] = (sidePipe[3] | !collectionX) & collectionAll;
+    	renderConnections[1] = (sidePipe[2] | !collectionX) & collectionAll;
+    	renderConnections[2] = (sidePipe[0] | !collectionY) & collectionAll;
+    	renderConnections[3] = (sidePipe[1] | !collectionY) & collectionAll;
+    	renderConnections[4] = (sidePipe[5] | !collectionZ) & collectionAll;
+    	renderConnections[5] = (sidePipe[4] | !collectionZ) & collectionAll;
+    	
+    	return renderConnections;
+	}
+	
 	/**
-     * Used internally only. Fills an array with randomly placed unique indices with boundaries
-     * @param rand
-     * @param indices
-     * @param length
-     * @param start
-     * @param arrayTranslate
+     * Adds all intersecting collision boxes to a list. (Be sure to only add boxes to the list if they intersect the
+     * mask.) Parameters: World, X, Y, Z, mask, list, colliding entity
      */
-    private void fillArrayWithIndices(Random rand, int[] indices, int length, int start, int arrayTranslate)
+    public void addCollisionBoxesToList(World world, int x, int y, int z, AxisAlignedBB axisAlignedBB, List list, Entity entity)
     {
-    	for(int i = 0; i < length; i++)
-    	{
-    		while(true)
-    		{
-    			int index = arrayTranslate + rand.nextInt(length);
-    			if(indices[index] == 0)
-    			{
-    				indices[index] = start + i;
-    				break;
-    			}
-    		}
-    	}
-    }
-    
-    private void shuffleArray(Random random, PipeBranch[] array, int limit)
-    {
-    	for(int i = limit; i > 0; i--)
-    	{
-    		int otherIndex = random.nextInt(i + 1);
-    		PipeBranch pipeBranch = array[otherIndex];
-    		array[otherIndex] = array[i];
-    		array[i] = pipeBranch;
-    	}
+        final boolean[] renderConnections = this.getRenderConnectionArray(world, x, y, z);
+    	
+        float f1 = 6.0F / 16.0F;
+    	float f2 = 10.0F / 16.0F;
+        
+    	float minX = renderConnections[0] ? 0.0F : f1;
+    	float maxX = renderConnections[1] ? 1.0F : f2;
+    	float minY = renderConnections[2] ? 0.0F : f1;
+    	float maxY = renderConnections[3] ? 1.0F : f2;
+    	float minZ = renderConnections[4] ? 0.0F : f1;
+    	float maxZ = renderConnections[5] ? 1.0F : f2;
+    	
+    	this.setBlockBounds(f1, f1, minZ, f2, f2, maxZ);
+        super.addCollisionBoxesToList(world, x, y, z, axisAlignedBB, list, entity);
+
+    	this.setBlockBounds(f1, minY, f1, f2, maxY, f2);
+        super.addCollisionBoxesToList(world, x, y, z, axisAlignedBB, list, entity);
+
+    	this.setBlockBounds(minX, f1, f1, maxX, f2, f2);
+        super.addCollisionBoxesToList(world, x, y, z, axisAlignedBB, list, entity);
+        
+        this.setBlockBoundsBasedOnState(world, x, y, z);
     }
 	
-	public boolean receiveGas(World world, int x, int y, int z, int side, GasType gasType)
+	/**
+     * Updates the blocks bounds based on its current state. Args: world, x, y, z
+     */
+    public void setBlockBoundsBasedOnState(IBlockAccess blockAccess, int x, int y, int z)
     {
+    	final boolean[] renderConnections = this.getRenderConnectionArray(blockAccess, x, y, z);
+    	
+        float f1 = 6.0F / 16.0F;
+    	float f2 = 10.0F / 16.0F;
+        
+    	float minX = renderConnections[0] ? 0.0F : f1;
+    	float maxX = renderConnections[1] ? 1.0F : f2;
+    	float minY = renderConnections[2] ? 0.0F : f1;
+    	float maxY = renderConnections[3] ? 1.0F : f2;
+    	float minZ = renderConnections[4] ? 0.0F : f1;
+    	float maxZ = renderConnections[5] ? 1.0F : f2;
+    	
+    	this.setBlockBounds(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+	
+	/**
+	 * Used internally only. Fills an array with randomly placed unique indices with boundaries
+	 * @param rand
+	 * @param indices
+	 * @param length
+	 * @param start
+	 * @param arrayTranslate
+	 */
+	private void fillArrayWithIndices(Random rand, int[] indices, int length, int start, int arrayTranslate)
+	{
+		for(int i = 0; i < length; i++)
+		{
+			while(true)
+			{
+				int index = arrayTranslate + rand.nextInt(length);
+				if(indices[index] == 0)
+				{
+					indices[index] = start + i;
+					break;
+				}
+			}
+		}
+	}
+	
+	private void shuffleArray(Random random, PipeBranch[] array, int limit)
+	{
+		for(int i = limit; i > 0; i--)
+		{
+			int otherIndex = random.nextInt(i + 1);
+			PipeBranch pipeBranch = array[otherIndex];
+			array[otherIndex] = array[i];
+			array[i] = pipeBranch;
+		}
+	}
+	
+	public boolean receiveGas(World world, int x, int y, int z, int side, GasType gasType)
+	{
 		final boolean[][][] branchedBlocks = new boolean[31][31][31];
 		branchedBlocks[15][15][15] = true;
 		final ArrayList<PipeBranch> branches = new ArrayList<PipeBranch>();
@@ -138,7 +225,7 @@ public class BlockGasPipe extends Block implements GasReceptor
 								newBranches[subBranches++] = branch.branch(j);
 							}
 						}
-						else if(GasReceptor.class.isAssignableFrom(directionBlock.getClass()))
+						else if(IGasReceptor.class.isAssignableFrom(directionBlock.getClass()))
 						{
 							connectedSurroundingBlocks++;
 							ends.add(branch.branch(j));
@@ -215,7 +302,7 @@ public class BlockGasPipe extends Block implements GasReceptor
 				int y2 = y + outPipe.y;
 				int z2 = z + outPipe.z;
 				
-				GasReceptor endBlock = (GasReceptor)Block.blocksList[world.getBlockId(x1, y1, z1)];
+				IGasReceptor endBlock = (IGasReceptor)Block.blocksList[world.getBlockId(x1, y1, z1)];
 				GasType outGasType = null;
 				
 				Block sourceBlock = Block.blocksList[world.getBlockId(x2, y2, z2)];
@@ -223,9 +310,9 @@ public class BlockGasPipe extends Block implements GasReceptor
 				{
 					outGasType = ((BlockGasPipe)sourceBlock).type;
 				}
-				else if(GasSource.class.isAssignableFrom(sourceBlock.getClass()))
+				else if(IGasSource.class.isAssignableFrom(sourceBlock.getClass()))
 				{
-					outGasType = ((GasSource)sourceBlock).takeGasTypeFromSide(world, x2, y2, z2, outPipe.getReverseDirection());
+					outGasType = ((IGasSource)sourceBlock).takeGasTypeFromSide(world, x2, y2, z2, outPipe.getReverseDirection());
 				}
 				
 				if(endBlock.receiveGas(world, x1, y1, z1, (int)end.getDirection(), outGasType))
@@ -270,53 +357,66 @@ public class BlockGasPipe extends Block implements GasReceptor
 		branchedBlocks[15][15][15] = true;*/
 		
 		return pushedEnd != null;
-    }
+	}
 	
 	/**
-     * Lets the block know when one of its neighbor changes. Doesn't know which neighbor changed (coordinates passed are
-     * their own) Args: x, y, z, neighbor blockID
-     */
-    public void onNeighborBlockChange(World world, int x, int y, int z, int neighboutBlockID)
-    {
-    	//if(this.blockID != Gases.gasPipeEmpty.blockID)
-    	{
-        	//world.scheduleBlockUpdate(x, y, z, this.blockID, 8);
-    	}
-    }
-    
-    /*public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int par6, float par7, float par8, float par9)
-    {
-    	world.scheduleBlockUpdate(x, y, z, this.blockID, 0);
-    	return true;
-    }*/
-    
-    /**
-     * Is this block (a) opaque and (b) a full 1m cube?  This determines whether or not to render the shared face of two
-     * adjacent blocks and also whether the player can attach torches, redstone wire, etc to this block.
-     */
-    public boolean isOpaqueCube()
-    {
-        return false;
-    }
-    
-    /**
-     * If this block doesn't render as an ordinary block it will return False (examples: signs, buttons, stairs, etc)
-     */
-    public boolean renderAsNormalBlock()
-    {
-        return false;
-    }
-
-    /**
-     * The type of render function that is called for this block
-     */
-    public int getRenderType()
-    {
-        return Gases.renderBlockGasPipeID;
-    }
-    
-    public int idPicked(World par1World, int par2, int par3, int par4)
-    {
-        return Gases.gasPipeAir.blockID;
-    }
+	 * Lets the block know when one of its neighbor changes. Doesn't know which neighbor changed (coordinates passed are
+	 * their own) Args: x, y, z, neighbor blockID
+	 */
+	public void onNeighborBlockChange(World world, int x, int y, int z, int neighboutBlockID)
+	{
+		//if(this.blockID != Gases.gasPipeEmpty.blockID)
+		{
+	    	//world.scheduleBlockUpdate(x, y, z, this.blockID, 8);
+		}
+	}
+	
+	/*public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int par6, float par7, float par8, float par9)
+	{
+		world.scheduleBlockUpdate(x, y, z, this.blockID, 0);
+		return true;
+	}*/
+	
+	/**
+	 * Is this block (a) opaque and (b) a full 1m cube?  This determines whether or not to render the shared face of two
+	 * adjacent blocks and also whether the player can attach torches, redstone wire, etc to this block.
+	 */
+	public boolean isOpaqueCube()
+	{
+	    return false;
+	}
+	
+	/**
+	 * If this block doesn't render as an ordinary block it will return False (examples: signs, buttons, stairs, etc)
+	 */
+	public boolean renderAsNormalBlock()
+	{
+	    return false;
+	}
+	
+	/**
+	 * The type of render function that is called for this block
+	 */
+	public int getRenderType()
+	{
+	    return Gases.renderBlockGasPipeID;
+	}
+	
+	public int idPicked(World par1World, int par2, int par3, int par4)
+	{
+	    return Gases.gasPipeAir.blockID;
+	}
+	
+	/**
+	 * Called on server worlds only when the block has been replaced by a different block ID, or the same block with a
+	 * different metadata value, but before the new metadata value is set. Args: World, x, y, z, old block ID, old
+	 * metadata
+	 */
+	public void breakBlock(World world, int x, int y, int z, int oldBlockID, int oldBlockMetadata)
+	{
+		if(type.gasBlock != null && world.isAirBlock(x, y, z))
+		{
+			world.setBlock(x, y, z, type.gasBlock.blockID);
+		}
+	}
 }

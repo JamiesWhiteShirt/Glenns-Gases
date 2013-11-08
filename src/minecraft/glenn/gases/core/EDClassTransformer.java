@@ -801,7 +801,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new TypeInsnNode(CHECKCAST, "glenn/gases/BlockGas"));
 			method.instructions.add(new VarInsnNode(ASTORE, 2));
 			method.instructions.add(l3);
-			method.instructions.add(new FrameNode(F_APPEND,2, new Object[] {INTEGER, "glenn/gases/BlockGas"}, 0, null));
 			method.instructions.add(new VarInsnNode(ILOAD, 1));
 			LabelNode l9 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l9));
@@ -924,11 +923,17 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new IntInsnNode(BIPUSH, 50));
 			method.instructions.add(new InsnNode(ISUB));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "suffocationTimer", "I"));
-			method.instructions.add(new VarInsnNode(ALOAD, 0));
+			
+			/*method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETSTATIC, classDamageSource, fieldGeneric, "L" + classDamageSource + ";"));
 			method.instructions.add(new LdcInsnNode(0.5F));
 			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityLivingBase, methodAttackEntityFrom, "(L" + classDamageSource + ";F)Z"));
-			method.instructions.add(new InsnNode(POP));
+			method.instructions.add(new InsnNode(POP));*/
+			method.instructions.add(new VarInsnNode(ALOAD, 2));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new VarInsnNode(ALOAD, 0));
+			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gases/GasType", "onBreathed", "(L" + classEntityLivingBase + ";)V"));
+			
 			method.instructions.add(l29);
 			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
@@ -957,7 +962,7 @@ public class EDClassTransformer implements IClassTransformer
 			
 			method.localVariables.add(new LocalVariableNode("this", "L" + classEntityLivingBase + ";", null, l0, l37, 0));
 			method.localVariables.add(new LocalVariableNode("isInsideOfGas", "Z", null, l1, l37, 1));
-			method.localVariables.add(new LocalVariableNode(c.get("Block"), "Lglenn/gases/BlockGas;", null, l2, l37, 2));
+			method.localVariables.add(new LocalVariableNode("block", "Lglenn/gases/BlockGas;", null, l2, l37, 2));
 			method.localVariables.add(new LocalVariableNode("d0", "D", null, l5, l3, 3));
 			method.localVariables.add(new LocalVariableNode("i", "I", null, l6, l3, 5));
 			method.localVariables.add(new LocalVariableNode("j", "I", null, l7, l3, 6));

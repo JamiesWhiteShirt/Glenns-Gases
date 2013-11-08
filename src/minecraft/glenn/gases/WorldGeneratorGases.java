@@ -18,6 +18,7 @@ public class WorldGeneratorGases implements IWorldGenerator
 
     private WorldGenerator risingFlammableGasGen;
     private WorldGenerator fallingExplosiveGasGen;
+    private WorldGenerator nitrousGasGen;
     private WorldGenerator electricGasGen;
     private WorldGenerator corrosiveGasGen;
 
@@ -25,6 +26,7 @@ public class WorldGeneratorGases implements IWorldGenerator
     {
     	this.risingFlammableGasGen = new WorldGenGas(Gases.gasRisingFlammable.blockID, 0, 16, 32);
     	this.fallingExplosiveGasGen = new WorldGenGas(Gases.gasFallingExplosive.blockID, 0, 16, 32);
+    	this.nitrousGasGen = new WorldGenGas(Gases.gasNitrous.blockID, 0, 12, 24);
     	this.electricGasGen = new WorldGenFloatingGas(Gases.gasElectric.blockID, 4, 16, 32);
     	this.corrosiveGasGen = new WorldGenFloatingGas(Gases.gasCorrosive.blockID, 4, 16, 32);
     }
@@ -44,8 +46,9 @@ public class WorldGeneratorGases implements IWorldGenerator
 		}
 		else if(chunkGenerator instanceof ChunkProviderGenerate)
 		{
-			if(Gases.generateGreenGas) this.genStandardOre1(4, this.risingFlammableGasGen, 16, 48);
-			if(Gases.generateRedGas) this.genStandardOre1(2, this.fallingExplosiveGasGen, 0, 16);
+			if(Gases.generateGreenGas) this.genStandardOre1(6, this.risingFlammableGasGen, 16, 48);
+			if(Gases.generateRedGas) this.genStandardOre1(3, this.fallingExplosiveGasGen, 0, 16);
+			if(Gases.generateNitrousGas) this.genStandardOre1(3, this.nitrousGasGen, 0, 16);
 		}
 	}
 

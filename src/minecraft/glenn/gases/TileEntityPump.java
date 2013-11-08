@@ -13,13 +13,13 @@ import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityPump extends TileEntity
 {
-	private static final int[] xDirection = new int[]{
+	protected static final int[] xDirection = new int[]{
 		0, 0, 1, -1, 0, 0
 	};
-	private static final int[] yDirection = new int[]{
-		-1, 1, 0, 0, 0, 0
+	protected static final int[] yDirection = new int[]{
+		1, -1, 0, 0, 0, 0
 	};
-	private static final int[] zDirection = new int[]{
+	protected static final int[] zDirection = new int[]{
 		0, 0, 0, 0, 1, -1
 	};
 	
@@ -108,39 +108,59 @@ public class TileEntityPump extends TileEntity
     	}
     }
 	
+    protected boolean extractFromSides()
+    {
+		int metadata = worldObj.getBlockMetadata(xCoord, yCoord, zCoord);
+    	int[] indices = randomIndexArray(this.worldObj.rand);
+		for(int i = 0; i < 6 & containedType == null; i++)
+		{
+			int index = indices[i];
+			if(index == metadata)
+			{
+				continue;
+			}
+			
+			int x1 = xCoord + xDirection[index];
+			int y1 = yCoord + yDirection[index];
+			int z1 = zCoord + zDirection[index];
+			
+			Block directionBlock = Block.blocksList[worldObj.getBlockId(x1, y1, z1)];
+			
+			if(directionBlock != null && IGasSource.class.isAssignableFrom(directionBlock.getClass()))
+			{
+				IGasSource gasSource = (IGasSource)directionBlock;
+				if(acceptsType(gasSource.getGasTypeFromSide(worldObj, x1, y1, z1, index)))
+				{
+					containedType = gasSource.takeGasTypeFromSide(worldObj, x1, y1, z1, index);
+				}
+				return false;
+			}
+		}
+		
+		return true;
+    }
+    
+    protected void handleFailedPumpings()
+    {
+    	if(failedPumpings > 20 && worldObj.rand.nextInt(1000 / ((failedPumpings - 20) * (failedPumpings - 20)) + 1) == 0)
+		{
+			DVec velocity = DVec.randomNormalizedVec(worldObj.rand).scale(0.25D);
+			worldObj.spawnParticle("largesmoke", xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D, velocity.x, velocity.y, velocity.z);
+		}
+		
+		if(failedPumpings > 60)
+		{
+			worldObj.createExplosion(null, xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D, 3.0F, true);
+		}
+    }
+    
 	public void updateEntity()
     {
 		if(pumpTime-- <= 0)
 		{
 			BlockPump block = (BlockPump)Block.blocksList[worldObj.getBlockId(xCoord, yCoord, zCoord)];
 			int metadata = worldObj.getBlockMetadata(xCoord, yCoord, zCoord);
-			boolean canPumpAir = true;
-			
-			int[] indices = randomIndexArray(this.worldObj.rand);
-			for(int i = 0; i < 6 & containedType == null; i++)
-			{
-				int index = indices[i];
-				if(index == metadata)
-				{
-					continue;
-				}
-				
-				int x1 = xCoord + xDirection[index];
-				int y1 = yCoord + yDirection[index];
-				int z1 = zCoord + zDirection[index];
-				
-				Block directionBlock = Block.blocksList[worldObj.getBlockId(x1, y1, z1)];
-				
-				if(directionBlock != null && GasSource.class.isAssignableFrom(directionBlock.getClass()))
-				{
-					GasSource gasSource = (GasSource)directionBlock;
-						canPumpAir = false;
-					if(acceptsType(gasSource.getGasTypeFromSide(worldObj, x1, y1, z1, index)))
-					{
-						containedType = gasSource.takeGasTypeFromSide(worldObj, x1, y1, z1, index);
-					}
-				}
-			}
+			boolean canPumpAir = extractFromSides();
 			
 			if(containedType == null & canPumpAir)
 			{
@@ -153,38 +173,41 @@ public class TileEntityPump extends TileEntity
 				int y1 = yCoord + yDirection[metadata];
 				int z1 = zCoord + zDirection[metadata];
 				
-				Block directionBlock = Block.blocksList[worldObj.getBlockId(x1, y1, z1)];
+				int directionBlockID = worldObj.getBlockId(x1, y1, z1);
+				Block directionBlock = Block.blocksList[directionBlockID];
+				boolean success = false;
 				
-				if(directionBlock != null && GasReceptor.class.isAssignableFrom(directionBlock.getClass()))
+				if(directionBlockID == 0)
 				{
-					if(((GasReceptor)directionBlock).receiveGas(worldObj, x1, y1, z1, metadata, containedType))
+					if(containedType.gasBlock != null)
 					{
-						containedType = null;
-						failedPumpings = 0;
+						worldObj.setBlock(x1, y1, z1, containedType.gasBlock.blockID);
 					}
-					else// if(!canPumpAir)
-					{
-						failedPumpings++;
-					}
+					success = true;
+				}
+				else if(directionBlock != null && IGasReceptor.class.isAssignableFrom(directionBlock.getClass()))
+				{
+					success = ((IGasReceptor)directionBlock).receiveGas(worldObj, x1, y1, z1, metadata < 2 ? (1 - metadata) : metadata, containedType);
+				}
+				
+				if(success)
+				{
+					containedType = null;
+					failedPumpings = 0;
+				}
+				else// if(!canPumpAir)
+				{
+					failedPumpings++;
 				}
 			}
 			
 			pumpTime = 25;
 		}
 		
-		if(failedPumpings > 20 && worldObj.rand.nextInt(1000 / ((failedPumpings - 20) * (failedPumpings - 20)) + 1) == 0)
-		{
-			DVec velocity = DVec.randomNormalizedVec(worldObj.rand).scale(0.25D);
-			worldObj.spawnParticle("largesmoke", xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D, velocity.x, velocity.y, velocity.z);
-		}
-		
-		if(failedPumpings > 60)
-		{
-			worldObj.createExplosion(null, xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D, 3.0F, true);
-		}
+		handleFailedPumpings();
     }
 	
-	private int[] randomIndexArray(Random random)
+	protected int[] randomIndexArray(Random random)
 	{
 		int[] array = new int[6];
 		

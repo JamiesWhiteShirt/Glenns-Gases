@@ -4,7 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.world.World;
 
-public class BlockGasTank2 extends Block implements GasSource
+public class BlockGasTank2 extends Block implements IGasSource
 {
 	public BlockGasTank2(int blockID)
 	{

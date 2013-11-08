@@ -1,7 +1,6 @@
 package glenn.gases;
 
-import glenn.gases.util.DVec;
-
+import java.util.ArrayList;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -13,10 +12,59 @@ import net.minecraft.world.World;
 
 public class BlockLantern extends Block
 {
-	public int containedItemIn;
-	public int containedItemOut;
+	protected class LanternRecipe
+	{
+		public int itemID;
+		public int itemDamage;
+		protected BlockLantern blockLantern;
+		
+		public LanternRecipe(ItemStack itemStack, BlockLantern blockLantern)
+		{
+			this.itemID = itemStack.itemID;
+			this.itemDamage = itemStack.getItemDamage();
+			this.blockLantern = blockLantern;
+		}
+		
+		public LanternRecipe()
+		{
+			
+		}
+		
+		public boolean equals(ItemStack itemStack)
+		{
+			return itemStack != null && this.itemID == itemStack.itemID & itemStack.getItemDamage() == this.itemDamage;
+		}
+		
+		public BlockLantern getLantern(ItemStack itemStack)
+		{
+			return blockLantern;
+		}
+	}
+	
+	private class LanternRecipeGas extends LanternRecipe
+	{
+		public boolean equals(ItemStack itemStack)
+		{
+			Item item = itemStack.getItem();
+			
+			return item != null && item instanceof ItemGasBottle;
+		}
+		
+		public BlockLantern getLantern(ItemStack itemStack)
+		{
+			Combustibility combustibility = GasType.gasTypes[itemStack.getItemDamage()].combustibility;
+			return GasType.gasTypes[itemStack.getItemDamage()].combustibility.lanternBlock;
+		}
+	}
+	
 	public int tickrate;
-	public int expirationBlockID;
+	public Combustibility combustibility;
+	
+	protected static final ArrayList<LanternRecipe> lanternRecipes = new ArrayList<LanternRecipe>();
+	
+	{
+		lanternRecipes.add(new LanternRecipeGas());
+	}
 	
 	/**
 	 * Creates a new lantern block.
@@ -26,14 +74,11 @@ public class BlockLantern extends Block
 	 * @param tickrate - The rate at which the lantern will burn out. Set to 0 for non-expiring lanterns.
 	 * @param expirationBlockID - The ID of the block this lantern will become when expired or destroyed. If -1, will become the block ID.
 	 */
-	public BlockLantern(int blockID, int containedItemIn, int containedItemOut, int tickrate, int expirationBlockID)
+	public BlockLantern(int blockID, Combustibility combustibility)
 	{
-		super(blockID, Material.circuits);
-
-		this.containedItemIn = containedItemIn;
-		this.containedItemOut = containedItemOut;
-		this.tickrate = tickrate;
-		this.expirationBlockID = expirationBlockID == -1 ? Gases.lanternEmptyID : expirationBlockID;
+		super(blockID, Material.iron);
+		this.tickrate = combustibility != null ? combustibility.burnRate : 0;
+		this.combustibility = combustibility;
 
         this.setBlockBounds(0.25F, 0.0F, 0.25F, 0.75F, 10.0F / 16.0F, 0.75F);
         
@@ -41,6 +86,57 @@ public class BlockLantern extends Block
         {
         	setTickRandomly(true);
         }
+        
+        if(combustibility != null)
+        {
+        	combustibility.lanternBlock = this;
+        }
+	}
+	
+	protected BlockLantern(int blockID, Combustibility combustibility, int tickrate)
+	{
+		super(blockID, Material.iron);
+		this.tickrate = tickrate;
+
+        this.setBlockBounds(0.25F, 0.0F, 0.25F, 0.75F, 10.0F / 16.0F, 0.75F);
+        
+        if(tickrate > 0)
+        {
+        	setTickRandomly(true);
+        }
+        
+        if(combustibility != null)
+        {
+        	combustibility.lanternBlock = this;
+        }
+	}
+	
+	public int getExpirationBlockID()
+	{
+		return Gases.lanternGasEmpty.blockID;
+	}
+	
+	public ItemStack getContainedItemOut()
+	{
+		return new ItemStack(Item.glassBottle);
+	}
+	
+	public ItemStack getContainedItemIn()
+	{
+		return null;
+	}
+	
+	public boolean isValidInItem(ItemStack itemStack)
+	{
+		for(LanternRecipe lanternRecipe : lanternRecipes)
+		{
+			if(lanternRecipe.equals(itemStack))
+			{
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public void updateTick(World par1World, int par2, int par3, int par4, Random par5Random)
@@ -50,7 +146,7 @@ public class BlockLantern extends Block
 			int metadata = par1World.getBlockMetadata(par2, par3, par4);
 			if(metadata <= 0)
 			{
-				par1World.setBlock(par2, par3, par4, expirationBlockID);
+				par1World.setBlock(par2, par3, par4, getExpirationBlockID());
 			} else
 			{
 				par1World.setBlockMetadataWithNotify(par2, par3, par4, metadata - 1, 3);
@@ -69,41 +165,58 @@ public class BlockLantern extends Block
     public boolean onBlockActivated(World par1World, int par2, int par3, int par4, EntityPlayer par5EntityPlayer, int par6, float par7, float par8, float par9)
     {
     	ItemStack inUse = par5EntityPlayer.getCurrentEquippedItem();
-    	ItemStack ejectedItem = new ItemStack(containedItemOut, 1, 0);
+    	ItemStack containedItem = getContainedItemIn();
+    	ItemStack ejectedItem = getContainedItemOut();
     	boolean consumeItem = false;
     	boolean blockAlreadyPlaced = false;
+    	
+    	boolean isNotEqual = !(!(ejectedItem == null | inUse == null) && (ejectedItem.itemID == inUse.itemID & ejectedItem.getItemDamage() == inUse.getItemDamage()));
 
     	if(inUse != null)
     	{
-    		if(inUse.itemID == containedItemOut)
+    		/*if(inUse.itemID == ejectedItem.itemID & inUse.getItemDamage() == ejectedItem.getItemDamage())
 	    	{
 	    		return false;
 	    	}
-    		else if(inUse.itemID == containedItemIn)
+    		else if(containedItem != null && inUse.itemID == containedItem.itemID & inUse.getItemDamage() == containedItem.getItemDamage() & !(containedItem.itemID == ejectedItem.itemID & containedItem.getItemDamage() == ejectedItem.getItemDamage()))
 	    	{
 				consumeItem = true;
 				onBlockAdded(par1World, par2, par3, par4);
 				blockAlreadyPlaced = true;
 	    	}
     		else
-	    	{
-	    		int lanternBlockID = Gases.getLanternForID(inUse.itemID);
+	    	*/{
+	    		BlockLantern lanternBlock = null;
+	    		
+	    		for(LanternRecipe lanternRecipe : lanternRecipes)
+	    		{
+	    			if(lanternRecipe.equals(inUse))
+	    			{
+	    				lanternBlock = lanternRecipe.getLantern(inUse);
+	    				break;
+	    			}
+	    		}
     			
-    			if(lanternBlockID != 0)
+	    		/*if(lanternBlock == this)
+	    		{
+	    			ejectedItem = null;
+    				blockAlreadyPlaced = true;
+	    		}
+	    		else */if(lanternBlock != null)
     			{
     				consumeItem = true;
-    				par1World.setBlock(par2, par3, par4, lanternBlockID);
+    				par1World.setBlock(par2, par3, par4, lanternBlock.blockID);
     				blockAlreadyPlaced = true;
     			}
 	    	}
 
-    		if(consumeItem && --inUse.stackSize <= 0)
+    		if((consumeItem & isNotEqual) && --inUse.stackSize <= 0)
 			{
 				par5EntityPlayer.destroyCurrentEquippedItem();
 			}
     	}
 
-    	if(ejectedItem.itemID != 0)
+    	if(ejectedItem != null & isNotEqual)
     	{
     		if(!par5EntityPlayer.inventory.addItemStackToInventory(ejectedItem))
             {
@@ -111,7 +224,7 @@ public class BlockLantern extends Block
             }
     	}
 
-		if(!blockAlreadyPlaced & expirationBlockID != blockID)
+		if(!blockAlreadyPlaced & getExpirationBlockID() != blockID)
 		{
 			par1World.setBlock(par2, par3, par4, Gases.lanternEmpty.blockID);
 			return false;
@@ -187,6 +300,6 @@ public class BlockLantern extends Block
      */
     public int idDropped(int par1, Random par2Random, int par3)
     {
-        return expirationBlockID;
+        return getExpirationBlockID();
     }
 }

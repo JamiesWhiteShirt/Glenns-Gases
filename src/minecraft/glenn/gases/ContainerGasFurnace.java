@@ -15,8 +15,8 @@ import net.minecraft.tileentity.TileEntityFurnace;
 public class ContainerGasFurnace extends Container
 {
     private TileEntityGasFurnace furnace;
-    private float lastCookTime;
-    private float lastCookSpeed;
+    private int lastCookTime;
+    private int lastCookSpeed;
     private int lastBurnTime;
     private int lastItemBurnTime;
     
@@ -25,7 +25,7 @@ public class ContainerGasFurnace extends Container
     public ContainerGasFurnace(InventoryPlayer par1InventoryPlayer, TileEntityGasFurnace par2TileEntityFurnace)
     {
         this.furnace = par2TileEntityFurnace;
-        this.addSlotToContainer(new Slot(par2TileEntityFurnace, 0, 56, 35));
+        this.addSlotToContainer(new Slot(par2TileEntityFurnace, 0, 56, 17));
         this.addSlotToContainer(new SlotFurnace(par1InventoryPlayer.player, par2TileEntityFurnace, 1, 116, 35));
         int i;
 
@@ -66,12 +66,12 @@ public class ContainerGasFurnace extends Container
             
             if (this.lastCookTime != this.furnace.furnaceCookTime | forceUpdate)
             {
-                icrafting.sendProgressBarUpdate(this, 0, Float.floatToRawIntBits(this.furnace.furnaceCookTime));
+                icrafting.sendProgressBarUpdate(this, 0, this.furnace.furnaceCookTime);
             }
             
             if (this.lastCookSpeed != this.furnace.furnaceCookSpeed | forceUpdate)
             {
-                icrafting.sendProgressBarUpdate(this, 1, Float.floatToRawIntBits(this.furnace.furnaceCookSpeed));
+                icrafting.sendProgressBarUpdate(this, 1, this.furnace.furnaceCookSpeed);
             }
             
             if (this.lastBurnTime != this.furnace.furnaceBurnTime | forceUpdate)
@@ -98,12 +98,12 @@ public class ContainerGasFurnace extends Container
     {
         if (par1 == 0)
         {
-            this.furnace.furnaceCookTime = Float.intBitsToFloat(par2);
+            this.furnace.furnaceCookTime = par2;
         }
         
         if (par1 == 1)
         {
-            this.furnace.furnaceCookSpeed = Float.intBitsToFloat(par2);
+            this.furnace.furnaceCookSpeed = par2;
         }
 
         if (par1 == 2)

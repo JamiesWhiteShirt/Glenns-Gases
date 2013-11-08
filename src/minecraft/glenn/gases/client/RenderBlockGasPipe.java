@@ -3,7 +3,7 @@ package glenn.gases.client;
 import org.lwjgl.opengl.GL11;
 
 import glenn.gases.BlockGasPipe;
-import glenn.gases.GasReceptor;
+import glenn.gases.IGasReceptor;
 import glenn.gases.Gases;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
@@ -141,7 +141,7 @@ public class RenderBlockGasPipe implements ISimpleBlockRenderingHandler
 			if(directionBlockID != 0)
 			{
 				Block directionBlock = Block.blocksList[directionBlockID];
-				sidePipe[i] = directionBlock instanceof BlockGasPipe || GasReceptor.class.isAssignableFrom(directionBlock.getClass());
+				sidePipe[i] = directionBlock instanceof BlockGasPipe || IGasReceptor.class.isAssignableFrom(directionBlock.getClass());
 				sideOpaque[i] = directionBlock.isOpaqueCube() & !sidePipe[i];
 			}
 		}
@@ -273,102 +273,105 @@ public class RenderBlockGasPipe implements ISimpleBlockRenderingHandler
         		tessellator.addVertexWithUV(maxX, maxY, maxZ, u(maxX), v(maxY));
         		tessellator.addVertexWithUV(minX, maxY, maxZ, u(minX), v(maxY));
     		}
-
-        	uIconTranslate = 8.0D;
-        	vIconTranslate = 0.0D;
-        	
-        	minX = sideOpaque[3] ? 0.0F : d1;
-    		maxX = sideOpaque[2] ? 1.0F : d2;
-    		minY = sideOpaque[0] ? 0.0F : d1;
-    		maxY = sideOpaque[1] ? 1.0F : d2;
-    		minZ = sideOpaque[5] ? 0.0F : d1;
-    		maxZ = sideOpaque[4] ? 1.0F : d2;
     		
-    		if(sidePipe[0] | !collectionY)
-        	{
-        		tessellator.setColorOpaque_F(0.6F, 0.6F, 0.6F);
-        		tessellator.addVertexWithUV(minX, d3, minZ, u(minX), v(minZ));
-        		tessellator.addVertexWithUV(maxX, d3, minZ, u(maxX), v(minZ));
-        		tessellator.addVertexWithUV(maxX, d3, maxZ, u(maxX), v(maxZ));
-        		tessellator.addVertexWithUV(minX, d3, maxZ, u(minX), v(maxZ));
+    		if(((x ^ y ^ z) & 1) > 0)
+    		{
+    			uIconTranslate = 8.0D;
+            	vIconTranslate = 0.0D;
+            	
+            	minX = sideOpaque[3] ? 0.0F : d1;
+        		maxX = sideOpaque[2] ? 1.0F : d2;
+        		minY = sideOpaque[0] ? 0.0F : d1;
+        		maxY = sideOpaque[1] ? 1.0F : d2;
+        		minZ = sideOpaque[5] ? 0.0F : d1;
+        		maxZ = sideOpaque[4] ? 1.0F : d2;
+        		
+        		if(sidePipe[0] | !collectionY)
+            	{
+            		tessellator.setColorOpaque_F(0.6F, 0.6F, 0.6F);
+            		tessellator.addVertexWithUV(minX, d3, minZ, u(minX), v(minZ));
+            		tessellator.addVertexWithUV(maxX, d3, minZ, u(maxX), v(minZ));
+            		tessellator.addVertexWithUV(maxX, d3, maxZ, u(maxX), v(maxZ));
+            		tessellator.addVertexWithUV(minX, d3, maxZ, u(minX), v(maxZ));
 
-        		tessellator.setColorOpaque_F(1.0F, 1.0F, 1.0F);
-        		tessellator.addVertexWithUV(minX, d3, maxZ, u(minX), v(maxZ));
-        		tessellator.addVertexWithUV(maxX, d3, maxZ, u(maxX), v(maxZ));
-        		tessellator.addVertexWithUV(maxX, d3, minZ, u(maxX), v(minZ));
-        		tessellator.addVertexWithUV(minX, d3, minZ, u(minX), v(minZ));
-        	}
-    		
-    		if(sidePipe[1] | !collectionY)
-        	{
-        		tessellator.setColorOpaque_F(0.6F, 0.6F, 0.6F);
-        		tessellator.addVertexWithUV(minX, d4, minZ, u(minX), v(minZ));
-        		tessellator.addVertexWithUV(maxX, d4, minZ, u(maxX), v(minZ));
-        		tessellator.addVertexWithUV(maxX, d4, maxZ, u(maxX), v(maxZ));
-        		tessellator.addVertexWithUV(minX, d4, maxZ, u(minX), v(maxZ));
+            		tessellator.setColorOpaque_F(1.0F, 1.0F, 1.0F);
+            		tessellator.addVertexWithUV(minX, d3, maxZ, u(minX), v(maxZ));
+            		tessellator.addVertexWithUV(maxX, d3, maxZ, u(maxX), v(maxZ));
+            		tessellator.addVertexWithUV(maxX, d3, minZ, u(maxX), v(minZ));
+            		tessellator.addVertexWithUV(minX, d3, minZ, u(minX), v(minZ));
+            	}
+        		
+        		if(sidePipe[1] | !collectionY)
+            	{
+            		tessellator.setColorOpaque_F(0.6F, 0.6F, 0.6F);
+            		tessellator.addVertexWithUV(minX, d4, minZ, u(minX), v(minZ));
+            		tessellator.addVertexWithUV(maxX, d4, minZ, u(maxX), v(minZ));
+            		tessellator.addVertexWithUV(maxX, d4, maxZ, u(maxX), v(maxZ));
+            		tessellator.addVertexWithUV(minX, d4, maxZ, u(minX), v(maxZ));
 
-        		tessellator.setColorOpaque_F(1.0F, 1.0F, 1.0F);
-        		tessellator.addVertexWithUV(minX, d4, maxZ, u(minX), v(maxZ));
-        		tessellator.addVertexWithUV(maxX, d4, maxZ, u(maxX), v(maxZ));
-        		tessellator.addVertexWithUV(maxX, d4, minZ, u(maxX), v(minZ));
-        		tessellator.addVertexWithUV(minX, d4, minZ, u(minX), v(minZ));
-        	}
-    		
-    		if(sidePipe[2] | !collectionX)
-        	{
-        		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
-        		tessellator.addVertexWithUV(d4, minY, maxZ, u(minY), v(maxZ));
-        		tessellator.addVertexWithUV(d4, maxY, maxZ, u(maxY), v(maxZ));
-        		tessellator.addVertexWithUV(d4, maxY, minZ, u(maxY), v(minZ));
-        		tessellator.addVertexWithUV(d4, minY, minZ, u(minY), v(minZ));
+            		tessellator.setColorOpaque_F(1.0F, 1.0F, 1.0F);
+            		tessellator.addVertexWithUV(minX, d4, maxZ, u(minX), v(maxZ));
+            		tessellator.addVertexWithUV(maxX, d4, maxZ, u(maxX), v(maxZ));
+            		tessellator.addVertexWithUV(maxX, d4, minZ, u(maxX), v(minZ));
+            		tessellator.addVertexWithUV(minX, d4, minZ, u(minX), v(minZ));
+            	}
         		
-        		tessellator.addVertexWithUV(d4, minY, minZ, u(minY), v(minZ));
-        		tessellator.addVertexWithUV(d4, maxY, minZ, u(maxY), v(minZ));
-        		tessellator.addVertexWithUV(d4, maxY, maxZ, u(maxY), v(maxZ));
-        		tessellator.addVertexWithUV(d4, minY, maxZ, u(minY), v(maxZ));
-        	}
+        		if(sidePipe[2] | !collectionX)
+            	{
+            		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
+            		tessellator.addVertexWithUV(d4, minY, maxZ, u(minY), v(maxZ));
+            		tessellator.addVertexWithUV(d4, maxY, maxZ, u(maxY), v(maxZ));
+            		tessellator.addVertexWithUV(d4, maxY, minZ, u(maxY), v(minZ));
+            		tessellator.addVertexWithUV(d4, minY, minZ, u(minY), v(minZ));
+            		
+            		tessellator.addVertexWithUV(d4, minY, minZ, u(minY), v(minZ));
+            		tessellator.addVertexWithUV(d4, maxY, minZ, u(maxY), v(minZ));
+            		tessellator.addVertexWithUV(d4, maxY, maxZ, u(maxY), v(maxZ));
+            		tessellator.addVertexWithUV(d4, minY, maxZ, u(minY), v(maxZ));
+            	}
 
-        	if(sidePipe[3] | !collectionX)
-        	{
-        		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
-        		tessellator.addVertexWithUV(d3, minY, maxZ, u(minY), v(maxZ));
-        		tessellator.addVertexWithUV(d3, maxY, maxZ, u(maxY), v(maxZ));
-        		tessellator.addVertexWithUV(d3, maxY, minZ, u(maxY), v(minZ));
-        		tessellator.addVertexWithUV(d3, minY, minZ, u(minY), v(minZ));
-        		
-        		tessellator.addVertexWithUV(d3, minY, minZ, u(minY), v(minZ));
-        		tessellator.addVertexWithUV(d3, maxY, minZ, u(maxY), v(minZ));
-        		tessellator.addVertexWithUV(d3, maxY, maxZ, u(maxY), v(maxZ));
-        		tessellator.addVertexWithUV(d3, minY, maxZ, u(minY), v(maxZ));
-        	}
-        	
-        	if(sidePipe[4] | !collectionZ)
-        	{
-        		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
-        		tessellator.addVertexWithUV(minX, maxY, d4, u(minX), v(maxY));
-        		tessellator.addVertexWithUV(maxX, maxY, d4, u(maxX), v(maxY));
-        		tessellator.addVertexWithUV(maxX, minY, d4, u(maxX), v(minY));
-        		tessellator.addVertexWithUV(minX, minY, d4, u(minX), v(minY));
-        		
-        		tessellator.addVertexWithUV(minX, minY, d4, u(minX), v(minY));
-        		tessellator.addVertexWithUV(maxX, minY, d4, u(maxX), v(minY));
-        		tessellator.addVertexWithUV(maxX, maxY, d4, u(maxX), v(maxY));
-        		tessellator.addVertexWithUV(minX, maxY, d4, u(minX), v(maxY));
-        	}
-        	
-        	if(sidePipe[5] | !collectionZ)
-        	{
-        		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
-        		tessellator.addVertexWithUV(minX, maxY, d3, u(minX), v(maxY));
-        		tessellator.addVertexWithUV(maxX, maxY, d3, u(maxX), v(maxY));
-        		tessellator.addVertexWithUV(maxX, minY, d3, u(maxX), v(minY));
-        		tessellator.addVertexWithUV(minX, minY, d3, u(minX), v(minY));
-        		
-        		tessellator.addVertexWithUV(minX, minY, d3, u(minX), v(minY));
-        		tessellator.addVertexWithUV(maxX, minY, d3, u(maxX), v(minY));
-        		tessellator.addVertexWithUV(maxX, maxY, d3, u(maxX), v(maxY));
-        		tessellator.addVertexWithUV(minX, maxY, d3, u(minX), v(maxY));
-        	}
+            	if(sidePipe[3] | !collectionX)
+            	{
+            		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
+            		tessellator.addVertexWithUV(d3, minY, maxZ, u(minY), v(maxZ));
+            		tessellator.addVertexWithUV(d3, maxY, maxZ, u(maxY), v(maxZ));
+            		tessellator.addVertexWithUV(d3, maxY, minZ, u(maxY), v(minZ));
+            		tessellator.addVertexWithUV(d3, minY, minZ, u(minY), v(minZ));
+            		
+            		tessellator.addVertexWithUV(d3, minY, minZ, u(minY), v(minZ));
+            		tessellator.addVertexWithUV(d3, maxY, minZ, u(maxY), v(minZ));
+            		tessellator.addVertexWithUV(d3, maxY, maxZ, u(maxY), v(maxZ));
+            		tessellator.addVertexWithUV(d3, minY, maxZ, u(minY), v(maxZ));
+            	}
+            	
+            	if(sidePipe[4] | !collectionZ)
+            	{
+            		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
+            		tessellator.addVertexWithUV(minX, maxY, d4, u(minX), v(maxY));
+            		tessellator.addVertexWithUV(maxX, maxY, d4, u(maxX), v(maxY));
+            		tessellator.addVertexWithUV(maxX, minY, d4, u(maxX), v(minY));
+            		tessellator.addVertexWithUV(minX, minY, d4, u(minX), v(minY));
+            		
+            		tessellator.addVertexWithUV(minX, minY, d4, u(minX), v(minY));
+            		tessellator.addVertexWithUV(maxX, minY, d4, u(maxX), v(minY));
+            		tessellator.addVertexWithUV(maxX, maxY, d4, u(maxX), v(maxY));
+            		tessellator.addVertexWithUV(minX, maxY, d4, u(minX), v(maxY));
+            	}
+            	
+            	if(sidePipe[5] | !collectionZ)
+            	{
+            		tessellator.setColorOpaque_F(0.8F, 0.8F, 0.8F);
+            		tessellator.addVertexWithUV(minX, maxY, d3, u(minX), v(maxY));
+            		tessellator.addVertexWithUV(maxX, maxY, d3, u(maxX), v(maxY));
+            		tessellator.addVertexWithUV(maxX, minY, d3, u(maxX), v(minY));
+            		tessellator.addVertexWithUV(minX, minY, d3, u(minX), v(minY));
+            		
+            		tessellator.addVertexWithUV(minX, minY, d3, u(minX), v(minY));
+            		tessellator.addVertexWithUV(maxX, minY, d3, u(maxX), v(minY));
+            		tessellator.addVertexWithUV(maxX, maxY, d3, u(maxX), v(maxY));
+            		tessellator.addVertexWithUV(minX, maxY, d3, u(minX), v(maxY));
+            	}
+    		}
     	}
     	
     	tessellator.addTranslation((float)-x, (float)-y, (float)-z);

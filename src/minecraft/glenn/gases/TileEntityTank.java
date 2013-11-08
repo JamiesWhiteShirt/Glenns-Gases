@@ -84,7 +84,11 @@ public class TileEntityTank extends TileEntity
 	
 	public boolean increment(GasType gasType)
 	{
-		if((containedType == null | containedType == gasType) & gasType != Gases.gasTypeAir)
+		if(gasType == Gases.gasTypeAir)
+		{
+			return true;
+		}
+		else if(containedType == null | containedType == gasType)
 		{
 			containedType = gasType;
 			if(++amount <= getGasCap())

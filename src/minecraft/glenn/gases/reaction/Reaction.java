@@ -6,7 +6,7 @@ import net.minecraft.world.World;
 
 public abstract class Reaction
 {
-	public int priority;
+	public final int priority;
 	
 	public Reaction(int priority)
 	{

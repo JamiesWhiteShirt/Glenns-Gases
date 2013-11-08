@@ -38,9 +38,10 @@ public class GuiGasFurnace extends GuiContainer
 	    int l = (this.height - this.ySize) / 2;
 	    this.drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
 	    
-	    int i1 = (int)(Math.ceil(this.furnaceInventory.furnaceCookSpeed - 0.5F));
-        this.drawTexturedModalRect(k + 55, l + 52, 176, 31 + i1 * 18, 18, 18);
-	
+		//GL11.glColor4f(1.0F, 1.0F, 1.0F, (this.furnaceInventory.furnaceBurnTime > 0 & this.furnaceInventory.canSmelt()) ? 1.0F : 0.5F);
+	    int i1 = (int)(Math.ceil((this.furnaceInventory.furnaceCookSpeed - 500) / 1000D));
+        this.drawTexturedModalRect(k + 55, l + 34, 176 + ((this.furnaceInventory.furnaceBurnTime > 0 & this.furnaceInventory.canSmelt()) ? 0 : 18), 31 + i1 * 18, 18, 18);
+
 	    i1 = this.furnaceInventory.getCookProgressScaled(24);
 	    this.drawTexturedModalRect(k + 79, l + 34, 176, 14, i1 + 1, 16);
 	}

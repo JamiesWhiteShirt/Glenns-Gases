@@ -25,7 +25,7 @@ import net.minecraft.world.World;
  * @author Glenn
  *
  */
-public class BlockGas extends Block
+public class BlockGas extends Block implements ISample
 {
 	public GasType type;
 
@@ -855,4 +855,10 @@ public class BlockGas extends Block
     {
     	return this.type.combustibility != Combustibility.NONE;
     }
+
+	@Override
+	public GasType sampleInteraction(World world, int x, int y, int z, GasType in, boolean excludes)
+	{
+		return type;
+	}
 }

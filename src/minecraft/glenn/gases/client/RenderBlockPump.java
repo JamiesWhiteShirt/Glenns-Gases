@@ -14,10 +14,10 @@ public class RenderBlockPump implements ISimpleBlockRenderingHandler
 {
 	private int[][] rotations = new int[][]{
 			{
-				3, 3, 3, 3, 0, 0
+				0, 0, 0, 0, 0, 0
 			},
 			{
-				0, 0, 0, 0, 0, 0
+				3, 3, 3, 3, 0, 0
 			},
 			{
 				0, 2, 1, 0, 1, 2
