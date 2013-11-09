@@ -7,9 +7,9 @@ import net.minecraft.potion.PotionEffect;
 
 public class GasTypePoisonous extends GasType
 {
-	public GasTypePoisonous(BlockGas gasBlock, BlockGasPipe gasPipe, int gasIndex, String name, int color, int opacity, int density)
+	public GasTypePoisonous(BlockGas gasBlock, BlockGasPipe gasPipe, int gasIndex, String name, int color, int opacity, int density, Combustibility combustibility)
 	{
-		super(gasBlock, gasPipe, gasIndex, name, color, opacity, density);
+		super(gasBlock, gasPipe, gasIndex, name, color, opacity, density, combustibility);
 	}
 	
 	@Override

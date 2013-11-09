@@ -2,6 +2,7 @@ package glenn.gases;
 
 import java.util.ArrayList;
 
+import glenn.gases.TileEntityGasFurnace.SpecialFurnaceRecipe;
 import glenn.gases.client.RenderBlockGas;
 import glenn.gases.client.RenderBlockGasPipe;
 import glenn.gases.client.RenderBlockLantern;
@@ -120,10 +121,9 @@ public class Gases
 	
 	public static Block gasPump;
 	public static Block gasTank;
-	public static Block gasTank2;
+	public static Block gasCollector;
 	public static Block gasFurnaceIdle;
 	public static Block gasFurnaceActive;
-	public static Block gasCollector;
 	
 	public static int lanternEmptyID;
 	public static BlockLantern lanternEmpty;
@@ -181,10 +181,9 @@ public class Gases
 	
 		GameRegistry.registerBlock(gasPump = new BlockPump(a("gasPumpID", 540)).setCreativeTab(creativeTab).setUnlocalizedName("gasPump").setTextureName("gases:pump"), "gasPump");
 		GameRegistry.registerBlock(gasTank = new BlockGasTank(a("gasTankID", 541)).setCreativeTab(creativeTab).setUnlocalizedName("gasTank").setTextureName("gases:tank"), "gasTank");
-		GameRegistry.registerBlock(gasTank2 = new BlockGasTank2(a("gasTank2ID", 542)).setCreativeTab(creativeTab).setUnlocalizedName("gasTank2").setTextureName("gases:tank"), "gasTank2");
+		GameRegistry.registerBlock(gasCollector = new BlockGasCollector(a("gasCollectorID", 542)).setCreativeTab(creativeTab).setUnlocalizedName("gasCollector").setTextureName("gases:collector"), "gasCollector");
 		GameRegistry.registerBlock(gasFurnaceIdle = (new BlockGasFurnace(a("gasFurnaceIdleID", 543), false)).setHardness(3.5F).setStepSound(Block.soundStoneFootstep).setUnlocalizedName("gasFurnace").setCreativeTab(creativeTab), "gasFurnaceIdle");
 		GameRegistry.registerBlock(gasFurnaceActive = (new BlockGasFurnace(a("gasFurnaceActiveID", 544), true)).setHardness(3.5F).setStepSound(Block.soundStoneFootstep).setLightValue(0.25F).setUnlocalizedName("gasFurnace"), "gasFurnaceActive");
-		GameRegistry.registerBlock(gasCollector = new BlockGasCollector(a("gasCollectorID", 545)).setCreativeTab(creativeTab).setUnlocalizedName("gasCollector").setTextureName("gases:collector"), "gasCollector");
 		
 		lanternEmptyID = a("lanternEmptyID", 550);
 		GameRegistry.registerBlock(lanternEmpty = (BlockLantern)(new BlockLanternEmpty(lanternEmptyID)).setHardness(0.0F).setUnlocalizedName("lanternEmpty").setCreativeTab(creativeTab).setTextureName("gases:lantern_empty"), "lanternEmpty");
@@ -198,15 +197,15 @@ public class Gases
 		GameRegistry.registerBlock(lanternGlowstone = (BlockLantern)(new BlockLanternSpecial(a("lanternGlowstoneID", 554), 0, new ItemStack(Item.glowstone), new ItemStack(Item.glowstone), null)).setLightValue(1.0F).setUnlocalizedName("lanternGlowstone").setTextureName("gases:lantern_glowstone"), "lanternGlowstone");
 		
 		gasTypeAir = new GasTypeAir();
-		gasTypeSmoke = new GasType(gasSmoke, gasPipeSmoke, 1, "Smoke", 0x3F3F3F, 2, -16).setEffectRates(4, 4, 0);
-		gasTypeSteam = new GasType(gasSteam, gasPipeSteam, 2, "Steam", 0xFFFFFF, 0, -8).setDamage(2.0F).setEvaporationRate(1);
-		gasTypeRisingFlammable = new GasType(gasRisingFlammable, gasPipeRisingFlammable, 3, "Green gas", 0x6F7F6F, 1, -12).setCombustibility(Combustibility.FLAMMABLE).setEffectRates(2, 2, 0);
-		gasTypeFallingExplosive = new GasType(gasFallingExplosive, gasPipeFallingExplosive, 4, "Red gas", 0x7F4F4F, 3, 4).setCombustibility(Combustibility.EXPLOSIVE).setEffectRates(1, 2, 0);
-		gasTypeVoid = new GasType(gasVoid, gasPipeVoid, 5, "Void gas", 0x1F1F1F, 4, 8).setEffectRates(20, 4, 0).setDamage(1.0F);
-		gasTypeElectric = new GasType(gasElectric, gasPipeElectric, 6, "Electric gas", 0x1F7F7F, 0, 0).setEffectRates(4, 2, 0);
-		gasTypeCorrosive = new GasType(gasCorrosive, gasPipeCorrosive, 7, "Corrosive gas", 0x1F1FDF, 0, 0).setEffectRates(4, 2, 0).setDamage(0.5F);
-		gasTypeNitrous = new GasTypePoisonous(gasNitrous, gasPipeNitrous, 8, "Nitrous gas", 0x6F3F2F, 3, 4).setEffectRates(1, 4, 0);
-		gasTypeAcidVapour = new GasType(gasAcidVapour, gasPipeAcidVapour, 9, "Acidic vapour", 0x4F7FBF, 0, -20).setEffectRates(20, 1, 0).setDamage(2.0F).setEvaporationRate(2);
+		gasTypeSmoke = new GasType(gasSmoke, gasPipeSmoke, 1, "Smoke", 0x3F3F3F, 2, -16, Combustibility.NONE).setEffectRates(4, 4, 0);
+		gasTypeSteam = new GasType(gasSteam, gasPipeSteam, 2, "Steam", 0xFFFFFF, 0, -8, Combustibility.NONE).setDamage(2.0F).setEvaporationRate(1);
+		gasTypeRisingFlammable = new GasType(gasRisingFlammable, gasPipeRisingFlammable, 3, "Green gas", 0x6F7F6F, 1, -12, Combustibility.FLAMMABLE).setEffectRates(2, 2, 0);
+		gasTypeFallingExplosive = new GasType(gasFallingExplosive, gasPipeFallingExplosive, 4, "Red gas", 0x7F4F4F, 3, 4, Combustibility.EXPLOSIVE).setEffectRates(1, 2, 0);
+		gasTypeVoid = new GasType(gasVoid, gasPipeVoid, 5, "Void gas", 0x1F1F1F, 4, 8, Combustibility.NONE).setEffectRates(20, 4, 0).setDamage(1.0F);
+		gasTypeElectric = new GasType(gasElectric, gasPipeElectric, 6, "Electric gas", 0x1F7F7F, 0, 0, Combustibility.NONE).setEffectRates(4, 2, 0);
+		gasTypeCorrosive = new GasType(gasCorrosive, gasPipeCorrosive, 7, "Corrosive gas", 0x1F1FDF, 0, 0, Combustibility.NONE).setEffectRates(4, 2, 0).setDamage(0.5F);
+		gasTypeNitrous = new GasTypePoisonous(gasNitrous, gasPipeNitrous, 8, "Nitrous gas", 0x6F3F2F, 3, 4, Combustibility.NONE).setEffectRates(1, 4, 0);
+		gasTypeAcidVapour = new GasType(gasAcidVapour, gasPipeAcidVapour, 9, "Acidic vapour", 0x4F7FBF, 0, -20, Combustibility.NONE).setEffectRates(20, 1, 0).setDamage(2.0F).setEvaporationRate(2);
 	}
 	
 	@EventHandler
@@ -261,7 +260,15 @@ public class Gases
 	
 		GameRegistry.registerWorldGenerator(new WorldGeneratorGases());
 	
-		GameRegistry.addRecipe(new ItemStack(lanternEmpty, 4), new Object[] {"I", "G", 'I', Item.ingotIron, 'G', Block.glass});
+		GameRegistry.addRecipe(new ItemStack(lanternEmpty, 4), "I", "G", 'I', Item.ingotIron, 'G', Block.glass);
+		GameRegistry.addRecipe(new ItemStack(gasPipeAir, 24), "III", 'I', Item.ingotIron);
+		GameRegistry.addRecipe(new ItemStack(gasPump), " I ", "PRP", " I ", 'I', Item.ingotIron, 'P', gasPipeAir, 'R', Item.redstone);
+		GameRegistry.addRecipe(new ItemStack(gasCollector), " P ", "PUP", " P ", 'U', gasPump, 'P', gasPipeAir);
+		GameRegistry.addRecipe(new ItemStack(gasTank), "IPI", "P P", "IPI", 'I', Item.ingotIron, 'P', gasPipeAir);
+		GameRegistry.addRecipe(new ItemStack(gasFurnaceIdle), " I ", "IFI", " I ", 'I', Item.ingotIron, 'F', Block.furnaceIdle);
+		GameRegistry.addShapelessRecipe(new ItemStack(gasSamplerExcluder), new ItemStack(Item.glassBottle), new ItemStack(Item.dyePowder, 1, 0));
+		GameRegistry.addShapelessRecipe(new ItemStack(gasSamplerIncluder), new ItemStack(Item.glassBottle), new ItemStack(Item.dyePowder, 1, 15));
+		addSpecialFurnaceRecipe(new ItemStack(Item.coal, 64), new ItemStack(Item.diamond), 25600);
 		
 		registerIgnitionBlock(Block.torchWood.blockID);
 		registerIgnitionBlock(Block.fire.blockID);
@@ -280,6 +287,7 @@ public class Gases
 		LanguageRegistry.addName(gasElectric, "Electric Gas");
 		LanguageRegistry.addName(gasCorrosive, "Corrosive Gas");
 		LanguageRegistry.addName(gasNitrous, "Nitrous Gas");
+		LanguageRegistry.addName(gasAcidVapour, "Acidic Vapour");
 		LanguageRegistry.addName(lanternEmpty, "Lantern");
 		LanguageRegistry.addName(lanternTorch, "Lantern with Torch");
 		LanguageRegistry.addName(lanternGasEmpty, "Empty Gas Lantern");
@@ -293,6 +301,7 @@ public class Gases
 		LanguageRegistry.addName(gasFurnaceIdle, "Gas Furnace");
 		LanguageRegistry.addName(gasPump, "Gas Pump");
 		LanguageRegistry.addName(gasTank, "Gas Tank");
+		LanguageRegistry.addName(gasCollector, "Gas Collector");
 		
 		LanguageRegistry.addName(glowstoneShard, "Glowstone Shard");
 		LanguageRegistry.addName(gasBottle, "Bottle of Gas");
@@ -380,5 +389,10 @@ public class Gases
 	public static int reverseDirection(int direction)
 	{
 		return (direction / 2) * 2 + 1 - direction % 2;
+	}
+	
+	public static void addSpecialFurnaceRecipe(ItemStack ingredient, ItemStack result, int cookTime)
+	{
+		TileEntityGasFurnace.specialFurnaceRecipes.add(new SpecialFurnaceRecipe(ingredient, result, cookTime));
 	}
 }

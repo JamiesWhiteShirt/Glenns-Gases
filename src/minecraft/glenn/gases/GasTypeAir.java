@@ -9,7 +9,7 @@ public class GasTypeAir extends GasType
 {
 	public GasTypeAir()
 	{
-		super(null, Gases.gasPipeAir, 0, "Air", 0, 0, 0);
+		super(null, Gases.gasPipeAir, 0, "Air", 0, 0, 0, Combustibility.NONE);
 	}
 	
 	public ItemStack getBottledItem()

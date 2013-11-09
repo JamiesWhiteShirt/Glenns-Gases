@@ -3,6 +3,8 @@ package glenn.gases;
 import java.util.ArrayList;
 import java.util.Random;
 
+import cpw.mods.fml.common.registry.GameRegistry;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
@@ -93,7 +95,7 @@ public class BlockLantern extends Block
         }
 	}
 	
-	protected BlockLantern(int blockID, Combustibility combustibility, int tickrate)
+	protected BlockLantern(int blockID, Combustibility combustibility, int tickrate, ItemStack containedItemIn)
 	{
 		super(blockID, Material.iron);
 		this.tickrate = tickrate;
@@ -109,6 +111,9 @@ public class BlockLantern extends Block
         {
         	combustibility.lanternBlock = this;
         }
+		
+		lanternRecipes.add(new LanternRecipe(containedItemIn, this));
+		GameRegistry.addShapelessRecipe(new ItemStack(this), new Object[]{new ItemStack(Gases.lanternEmpty), containedItemIn.copy()});
 	}
 	
 	public int getExpirationBlockID()

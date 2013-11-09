@@ -1,5 +1,7 @@
 package glenn.gases;
 
+import java.util.ArrayList;
+
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -23,9 +25,30 @@ import net.minecraftforge.common.ForgeDummyContainer;
 
 public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
 {
+	public static class SpecialFurnaceRecipe
+	{
+		public final ItemStack ingredient;
+		public final ItemStack result;
+		public final int cookTime;
+		
+		public SpecialFurnaceRecipe(ItemStack ingredient, ItemStack result, int cookTime)
+		{
+			this.ingredient = ingredient;
+			this.result = result;
+			this.cookTime = cookTime;
+		}
+		
+		public boolean is(ItemStack itemStack)
+		{
+			return itemStack.itemID == ingredient.itemID & itemStack.getItemDamage() == ingredient.getItemDamage() & itemStack.stackSize >= ingredient.stackSize;
+		}
+	}
+	
     private static final int[] slots_top = new int[] {0};
     private static final int[] slots_bottom = new int[] {2, 1};
     private static final int[] slots_sides = new int[] {1};
+    
+    public static final ArrayList<SpecialFurnaceRecipe> specialFurnaceRecipes = new ArrayList<SpecialFurnaceRecipe>();
 
     /**
      * The ItemStacks that hold the items currently being used in the furnace
@@ -59,6 +82,35 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
     public ItemStack getStackInSlot(int par1)
     {
         return this.furnaceItemStacks[par1];
+    }
+    
+    public SpecialFurnaceRecipe getSpecialFurnaceRecipe(ItemStack itemStack)
+    {
+    	for(SpecialFurnaceRecipe recipe : specialFurnaceRecipes)
+    	{
+    		if(recipe.is(itemStack)) return recipe;
+    	}
+    	
+    	return null;
+    }
+    
+    public int getCurrentItemBurnTime()
+    {
+    	if(this.furnaceItemStacks[0] == null)
+    	{
+    		return 200;
+    	}
+    	
+    	SpecialFurnaceRecipe recipe = getSpecialFurnaceRecipe(this.furnaceItemStacks[0]);
+    	
+    	if(recipe != null)
+    	{
+    		return recipe.cookTime;
+    	}
+    	else
+    	{
+    		return 200;
+    	}
     }
 
     /**
@@ -229,7 +281,7 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
      */
     public int getCookProgressScaled(int par1)
     {
-        return this.furnaceCookTime * par1 / (200 * 1000);
+        return this.furnaceCookTime * par1 / (getCurrentItemBurnTime() * 1000);
     }
 
     /**
@@ -281,7 +333,7 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
                 this.furnaceCookTime += this.furnaceCookSpeed;
                 this.furnaceCookSpeed += Gases.gasFurnaceHeatingSpeed;
 
-                if (this.furnaceCookTime >= 200 * 1000)
+                if (this.furnaceCookTime >= getCurrentItemBurnTime() * 1000)
                 {
                     this.furnaceCookTime = 0;
                     this.smeltItem();
@@ -325,15 +377,28 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
         {
             return false;
         }
-        else
+        
+        ItemStack itemstack = FurnaceRecipes.smelting().getSmeltingResult(this.furnaceItemStacks[0]);
+        
+        if(itemstack == null)
         {
-            ItemStack itemstack = FurnaceRecipes.smelting().getSmeltingResult(this.furnaceItemStacks[0]);
-            if (itemstack == null) return false;
-            if (this.furnaceItemStacks[1] == null) return true;
-            if (!this.furnaceItemStacks[1].isItemEqual(itemstack)) return false;
-            int result = furnaceItemStacks[1].stackSize + itemstack.stackSize;
-            return (result <= getInventoryStackLimit() && result <= itemstack.getMaxStackSize());
+        	SpecialFurnaceRecipe recipe = this.getSpecialFurnaceRecipe(this.furnaceItemStacks[0]);
+        	
+        	if(recipe != null)
+        	{
+        		itemstack = recipe.result;
+        	}
         }
+        
+        if (itemstack != null)
+        {
+        	if (this.furnaceItemStacks[1] == null) return true;
+	        if (!this.furnaceItemStacks[1].isItemEqual(itemstack)) return false;
+	        int result = furnaceItemStacks[1].stackSize + itemstack.stackSize;
+	        return (result <= getInventoryStackLimit() && result <= itemstack.getMaxStackSize());
+        }
+        
+        return false;
     }
 
     /**
@@ -344,21 +409,46 @@ public class TileEntityGasFurnace extends TileEntity implements ISidedInventory
         if (this.canSmelt())
         {
             ItemStack itemstack = FurnaceRecipes.smelting().getSmeltingResult(this.furnaceItemStacks[0]);
-
-            if (this.furnaceItemStacks[1] == null)
+            
+            if(itemstack == null)
             {
-                this.furnaceItemStacks[1] = itemstack.copy();
+            	SpecialFurnaceRecipe recipe = this.getSpecialFurnaceRecipe(this.furnaceItemStacks[0]);
+            	
+            	itemstack = recipe.result;
+            	
+            	if (this.furnaceItemStacks[1] == null)
+                {
+                    this.furnaceItemStacks[1] = itemstack.copy();
+                }
+                else if (this.furnaceItemStacks[1].isItemEqual(itemstack))
+                {
+                    furnaceItemStacks[1].stackSize += itemstack.stackSize;
+                }
+
+                this.furnaceItemStacks[0].stackSize -= recipe.ingredient.stackSize;
+
+                if (this.furnaceItemStacks[0].stackSize <= 0)
+                {
+                    this.furnaceItemStacks[0] = null;
+                }
             }
-            else if (this.furnaceItemStacks[1].isItemEqual(itemstack))
+            else
             {
-                furnaceItemStacks[1].stackSize += itemstack.stackSize;
-            }
+            	if (this.furnaceItemStacks[1] == null)
+                {
+                    this.furnaceItemStacks[1] = itemstack.copy();
+                }
+                else if (this.furnaceItemStacks[1].isItemEqual(itemstack))
+                {
+                    furnaceItemStacks[1].stackSize += itemstack.stackSize;
+                }
 
-            --this.furnaceItemStacks[0].stackSize;
+                --this.furnaceItemStacks[0].stackSize;
 
-            if (this.furnaceItemStacks[0].stackSize <= 0)
-            {
-                this.furnaceItemStacks[0] = null;
+                if (this.furnaceItemStacks[0].stackSize <= 0)
+                {
+                    this.furnaceItemStacks[0] = null;
+                }
             }
         }
     }

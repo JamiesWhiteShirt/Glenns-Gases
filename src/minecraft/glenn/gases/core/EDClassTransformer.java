@@ -110,14 +110,14 @@ public class EDClassTransformer implements IClassTransformer
 		{
 			newData = patchClassEntityLivingBase(data, false);
 		}
-		else if(className.equals(c.get("ItemGlassBottle")))
+		/*else if(className.equals(c.get("ItemGlassBottle")))
 		{
 			newData = patchClassItemGlassBottle(data, true);
 		}
 		else if(className.equals("net.minecraft.item.ItemGlassBottle"))
 		{
 			newData = patchClassItemGlassBottle(data, false);
-		}
+		}*/
 		else if(className.equals(c.get("BlockFluid")))
 		{
 			newData = patchClassBlockFluid(data, true);
@@ -463,7 +463,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new VarInsnNode(ALOAD, 1));
 				newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(l2);
-				newInstructions.add(new FrameNode(F_APPEND,1, new Object[] {classMovingObjectPosition}, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 4));
 				newInstructions.add(new FieldInsnNode(GETFIELD, classMovingObjectPosition, fieldTypeOfHit, "L" + enumMovingObjectType + ";"));
 				newInstructions.add(new FieldInsnNode(GETSTATIC, enumMovingObjectType, fieldTILE, "L" + enumMovingObjectType + ";"));
@@ -499,7 +498,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new VarInsnNode(ALOAD, 1));
 				newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(l9);
-				newInstructions.add(new FrameNode(F_APPEND, 3, new Object[] {INTEGER, INTEGER, INTEGER}, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 3));
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
@@ -515,7 +513,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new VarInsnNode(ALOAD, 1));
 				newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(l11);
-				newInstructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 2));
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
@@ -546,7 +543,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKESPECIAL, classItemStack, "<init>", "(L" + classItem + ";)V"));
 				newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(l16);
-				newInstructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 3));
 				newInstructions.add(new FieldInsnNode(GETFIELD, classEntityPlayer, fieldInventory, "L" + classInventoryPlayer + ";"));
 				newInstructions.add(new TypeInsnNode(NEW, classItemStack));
@@ -568,7 +564,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityPlayer, methodDropPlayerItem, "(L" + classItemStack + ";)L" + classEntityItem + ";"));
 				newInstructions.add(new InsnNode(POP));
 				newInstructions.add(l13);
-				newInstructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 2));
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
@@ -606,7 +601,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
 				newInstructions.add(new InsnNode(ARETURN));
 				newInstructions.add(l21);
-				newInstructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 3));
 				newInstructions.add(new FieldInsnNode(GETFIELD, classEntityPlayer, fieldInventory, "L" + classInventoryPlayer + ";"));
 				newInstructions.add(new VarInsnNode(ALOAD, 2));
@@ -628,7 +622,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityPlayer, methodDropPlayerItem, "(L" + classItemStack + ";)L" + classEntityItem + ";"));
 				newInstructions.add(new InsnNode(POP));
 				newInstructions.add(l23);
-				newInstructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 2));
 				newInstructions.add(new VarInsnNode(ILOAD, 5));
 				newInstructions.add(new VarInsnNode(ILOAD, 6));
@@ -637,7 +630,6 @@ public class EDClassTransformer implements IClassTransformer
 				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
 				newInstructions.add(new InsnNode(POP));
 				newInstructions.add(l4);
-				newInstructions.add(new FrameNode(F_CHOP, 3, null, 0, null));
 				newInstructions.add(new VarInsnNode(ALOAD, 1));
 				newInstructions.add(new InsnNode(ARETURN));
 
@@ -819,7 +811,6 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l12 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(GOTO, l12));
 			method.instructions.add(l9);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "blindnessTimer", "I"));
@@ -827,7 +818,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new InsnNode(ISUB));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			method.instructions.add(l12);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ILOAD, 1));
 			LabelNode l13 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l13));
@@ -846,7 +836,6 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l16 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(GOTO, l16));
 			method.instructions.add(l13);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "suffocationTimer", "I"));
@@ -854,7 +843,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new InsnNode(ISUB));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			method.instructions.add(l16);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ILOAD, 1));
 			LabelNode l17 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l17));
@@ -873,7 +861,6 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l20 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(GOTO, l20));
 			method.instructions.add(l17);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "slownessTimer", "I"));
@@ -881,7 +868,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new InsnNode(ISUB));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			method.instructions.add(l20);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			LabelNode l21 = new LabelNode();
@@ -892,7 +878,6 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l24 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(GOTO, l24));
 			method.instructions.add(l21);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			method.instructions.add(new IntInsnNode(SIPUSH, 500));
@@ -901,7 +886,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new IntInsnNode(SIPUSH, 500));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			method.instructions.add(l24);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			LabelNode l26 = new LabelNode();
@@ -912,7 +896,6 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l29 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(GOTO, l29));
 			method.instructions.add(l26);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			method.instructions.add(new IntInsnNode(SIPUSH, 400));
@@ -935,7 +918,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gases/GasType", "onBreathed", "(L" + classEntityLivingBase + ";)V"));
 			
 			method.instructions.add(l29);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			LabelNode l32 = new LabelNode();
@@ -946,7 +928,6 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l35 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(GOTO, l35));
 			method.instructions.add(l32);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			method.instructions.add(new IntInsnNode(SIPUSH, 1000));
@@ -955,7 +936,6 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new IntInsnNode(SIPUSH, 1000));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			method.instructions.add(l35);
-			method.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
 			method.instructions.add(new InsnNode(RETURN));
 			LabelNode l37 = new LabelNode();
 			method.instructions.add(l37);
@@ -1065,7 +1045,6 @@ public class EDClassTransformer implements IClassTransformer
 						newInstructions.add(new InsnNode(ICONST_0));
 						newInstructions.add(new InsnNode(IRETURN));
 						newInstructions.add(l6);
-						newInstructions.add(new FrameNode(F_CHOP, 1, null, 0, null));
 					}
 				}
 				method.instructions = newInstructions;
@@ -1173,7 +1152,6 @@ public class EDClassTransformer implements IClassTransformer
 					{
 						if(theLabelNode != null && theLabelNode == (LabelNode)instruction)
 						{
-							newInstructions.add(new FrameNode(3, 0, null, 0, null));
 							newInstructions.add(new VarInsnNode(ALOAD, 0));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";"));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";"));
@@ -1277,7 +1255,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(RETURN);
 			renderGasOverlay.visitLabel(l8);
 			renderGasOverlay.visitLineNumber(667, l8);
-			renderGasOverlay.visitFrame(F_FULL, 8, new Object[] {classItemRenderer, FLOAT, classTessellator, FLOAT, INTEGER, INTEGER, INTEGER, INTEGER}, 0, new Object[] {});
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";");
 			renderGasOverlay.visitVarInsn(ILOAD, 7);
 			renderGasOverlay.visitInsn(AALOAD);

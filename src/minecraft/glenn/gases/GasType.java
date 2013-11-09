@@ -3,6 +3,8 @@ package glenn.gases;
 import java.util.HashMap;
 import java.util.Map;
 
+import cpw.mods.fml.common.registry.GameRegistry;
+
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -20,7 +22,7 @@ public class GasType
 	public final int opacity;
 	public final int density;
 	
-	public Combustibility combustibility;
+	public final Combustibility combustibility;
 	public int evaporationRate;
 	public float damage;
 	
@@ -28,7 +30,7 @@ public class GasType
 	public int suffocationRate;
 	public int slownessRate;
 	
-	public GasType(BlockGas gasBlock, BlockGasPipe gasPipe, int gasIndex, String name, int color, int opacity, int density)
+	public GasType(BlockGas gasBlock, BlockGasPipe gasPipe, int gasIndex, String name, int color, int opacity, int density, Combustibility combustibility)
 	{
 		this.gasBlock = gasBlock;
 		this.gasPipe = gasPipe;
@@ -38,7 +40,7 @@ public class GasType
         this.color = color;
         this.opacity = opacity;
         this.density = density;
-        this.combustibility = Combustibility.NONE;
+        this.combustibility = combustibility;
         
         this.evaporationRate = 0;
         this.damage = 0.0F;
@@ -54,6 +56,16 @@ public class GasType
 		if(gasPipe != null)
 		{
 			gasPipe.type = this;
+		}
+		
+		if(gasBlock != null & (combustibility.fireSpreadRate >= 0 | combustibility.explosionPower > 0.0F))
+        {
+        	gasBlock.setBurnProperties(gasBlock.blockID, 1000, 1000);
+        }
+		
+		if(combustibility.lanternBlock != null)
+		{
+			GameRegistry.addShapelessRecipe(new ItemStack(combustibility.lanternBlock), new Object[]{new ItemStack(Gases.lanternEmpty), new ItemStack(Gases.gasBottle, 1, gasIndex)});
 		}
 		
 		if(gasTypes[gasIndex] != null)
@@ -75,18 +87,6 @@ public class GasType
 	public GasType setDamage(float damage)
 	{
 		this.damage = damage;
-		return this;
-	}
-	
-	public GasType setCombustibility(Combustibility combustibility)
-	{
-		this.combustibility = combustibility;
-		
-    	if(gasBlock != null & (combustibility.fireSpreadRate >= 0 | combustibility.explosionPower > 0.0F))
-        {
-        	gasBlock.setBurnProperties(gasBlock.blockID, 1000, 1000);
-        }
-		
 		return this;
 	}
 	
