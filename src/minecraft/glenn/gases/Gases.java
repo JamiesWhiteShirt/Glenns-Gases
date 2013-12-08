@@ -46,11 +46,11 @@ public class Gases
 	public static final String version = "1.4.1";
 	
 	private static Configuration config;
-	public static boolean generateGreenGas;
-	public static boolean generateRedGas;
-	public static boolean generateNitrousGas;
-	public static boolean generateElectricGas;
-	public static boolean generateCorrosiveGas;
+	public static int generateGreenGas;
+	public static int generateRedGas;
+	public static int generateNitrousGas;
+	public static int generateElectricGas;
+	public static int generateCorrosiveGas;
 	public static int voidGasMaxHeight;
 	public static float maxHardnessForCorrosion;
 	public static boolean enableUpdateCheck;
@@ -67,6 +67,7 @@ public class Gases
 	public static BlockGas gasCorrosive;
 	public static BlockGas gasNitrous;
 	public static BlockGas gasAcidVapour;
+	public static BlockGas gasCoalDust;
 	
 	public static BlockGasPipe gasPipeSteam;
 	public static BlockGasPipe gasPipeRisingFlammable;
@@ -75,7 +76,6 @@ public class Gases
 	public static BlockGasPipe gasPipeElectric;
 	public static BlockGasPipe gasPipeCorrosive;
 	public static BlockGasPipe gasPipeNitrous;
-	public static BlockGasPipe gasPipeAcidVapour;
 	
 	public static BlockLantern lanternTorch;
 	public static BlockLantern lanternGlowstone;
@@ -88,19 +88,21 @@ public class Gases
 	public static GasType gasTypeCorrosive;
 	public static GasType gasTypeNitrous;
 	public static GasType gasTypeAcidVapour;
+	public static GasType gasTypeCoalDust;
 	
 	private void initBlocksAndItems()
 	{
 		GameRegistry.registerItem(glowstoneShard = (new ItemGlowstoneShard(b("glowstoneShardID", 401))).setUnlocalizedName("glowstoneShard").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:glowstone_shard"), "glowstoneShard");
 		
-		GameRegistry.registerBlock(gasSteam = (BlockGas)(new BlockGas(a("gasSteamID", 501))).setHardness(0.0F).setUnlocalizedName("gasSteam").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasSteam");
-		GameRegistry.registerBlock(gasRisingFlammable = (BlockGas)(new BlockGas(a("gasRisingFlammableID", 502))).setHardness(0.0F).setUnlocalizedName("gasRisingFlammable").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasRisingFlammable");
-		GameRegistry.registerBlock(gasFallingExplosive = (BlockGas)(new BlockGas(a("gasFallingExplosiveID", 503))).setHardness(0.0F).setUnlocalizedName("gasFallingExplosive").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasFallingExplosive");
-		GameRegistry.registerBlock(gasVoid = (BlockGas)(new BlockGasVoid(a("gasVoidID", 504))).setHardness(0.0F).setUnlocalizedName("gasVoid").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasVoid");
-		GameRegistry.registerBlock(gasElectric = (BlockGas)(new BlockGasElectric(a("gasElectricID", 505))).setHardness(0.0F).setUnlocalizedName("gasElectric").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas_special"), "gasElectric");
-		GameRegistry.registerBlock(gasCorrosive = (BlockGas)(new BlockGas(a("gasCorrosiveID", 506))).setHardness(0.0F).setUnlocalizedName("gasCorrosive").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas_special"), "gasCorrosive");
-		GameRegistry.registerBlock(gasNitrous = (BlockGas)(new BlockGas(a("gasNitrousID", 506))).setHardness(0.0F).setUnlocalizedName("gasNitrous").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasNitrous");
-		GameRegistry.registerBlock(gasAcidVapour = (BlockGas)(new BlockGas(a("gasAcidVapourID", 507))).setHardness(0.0F).setUnlocalizedName("gasAcidVapour").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas_special"), "gasAcidVapour");
+		GameRegistry.registerBlock(gasSteam = (BlockGas)(new BlockGas(a("gasSteamID", 501))).setUnlocalizedName("gasSteam").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasSteam");
+		GameRegistry.registerBlock(gasRisingFlammable = (BlockGas)(new BlockGas(a("gasRisingFlammableID", 502))).setUnlocalizedName("gasRisingFlammable").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasRisingFlammable");
+		GameRegistry.registerBlock(gasFallingExplosive = (BlockGas)(new BlockGas(a("gasFallingExplosiveID", 503))).setUnlocalizedName("gasFallingExplosive").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasFallingExplosive");
+		GameRegistry.registerBlock(gasVoid = (BlockGas)(new BlockGasVoid(a("gasVoidID", 504))).setUnlocalizedName("gasVoid").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasVoid");
+		GameRegistry.registerBlock(gasElectric = (BlockGas)(new BlockGasElectric(a("gasElectricID", 505))).setUnlocalizedName("gasElectric").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas_special"), "gasElectric");
+		GameRegistry.registerBlock(gasCorrosive = (BlockGas)(new BlockGas(a("gasCorrosiveID", 506))).setUnlocalizedName("gasCorrosive").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas_special"), "gasCorrosive");
+		GameRegistry.registerBlock(gasNitrous = (BlockGas)(new BlockGas(a("gasNitrousID", 506))).setUnlocalizedName("gasNitrous").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas"), "gasNitrous");
+		GameRegistry.registerBlock(gasAcidVapour = (BlockGas)(new BlockGas(a("gasAcidVapourID", 507))).setUnlocalizedName("gasAcidVapour").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas_special"), "gasAcidVapour");
+		GameRegistry.registerBlock(gasCoalDust = (BlockGas)(new BlockGas(a("gasCoalDustID", 508)).setUnlocalizedName("gasCoalDust").setCreativeTab(GasesFramework.creativeTab).setTextureName("gases:gas")), "gasCoalDust");
 		
 		GameRegistry.registerBlock(gasPipeSteam = (BlockGasPipe)new BlockGasPipe(a("gasPipeSteamID", 527)).setUnlocalizedName("gasPipeSteam"), "gasPipeSteam");
 		GameRegistry.registerBlock(gasPipeRisingFlammable = (BlockGasPipe)new BlockGasPipe(a("gasPipeRisingFlammableID", 528)).setUnlocalizedName("gasPipeRisingFlammable"), "gasPipeRisingFlammable");
@@ -109,19 +111,19 @@ public class Gases
 		GameRegistry.registerBlock(gasPipeElectric = (BlockGasPipe)new BlockGasPipe(a("gasPipeElectricID", 531)).setUnlocalizedName("gasPipeElectric"), "gasPipeElectric");
 		GameRegistry.registerBlock(gasPipeCorrosive = (BlockGasPipe)new BlockGasPipe(a("gasPipeCorrosiveID", 532)).setUnlocalizedName("gasPipeCorrosive"), "gasPipeCorrosive");
 		GameRegistry.registerBlock(gasPipeNitrous = (BlockGasPipe)new BlockGasPipe(a("gasPipeNitrousID", 532)).setUnlocalizedName("gasPipeNitrous"), "gasPipeNitrous");
-		GameRegistry.registerBlock(gasPipeNitrous = (BlockGasPipe)new BlockGasPipe(a("gasPipeAcidVapourID", 532)).setUnlocalizedName("gasPipeAcidVapour"), "gasPipeAcidVapour");
 		
 		GameRegistry.registerBlock(lanternTorch = (BlockLantern)(new BlockLanternSpecial(a("lanternTorchID", 551), 0, new ItemStack(Block.torchWood), new ItemStack(Block.torchWood), null)).setLightValue(10.0F / 16.0F).setUnlocalizedName("lanternTorch").setTextureName("gases:lantern_torch"), "lanternTorch");
 		GameRegistry.registerBlock(lanternGlowstone = (BlockLantern)(new BlockLanternSpecial(a("lanternGlowstoneID", 554), 0, new ItemStack(Item.glowstone), new ItemStack(Item.glowstone), null)).setLightValue(1.0F).setUnlocalizedName("lanternGlowstone").setTextureName("gases:lantern_glowstone"), "lanternGlowstone");
 		
-		gasTypeSteam = new GasType(gasSteam, gasPipeSteam, 2, "Steam", 0xFFFFFF, 0, -8, Combustibility.NONE).setDamage(2.0F).setEvaporationRate(1);
+		gasTypeSteam = new GasType(gasSteam, gasPipeSteam, 2, "Steam", 0xFFFFFF, 0, -8, Combustibility.NONE).setDamage(2.0F).setEvaporationRate(2);
 		gasTypeRisingFlammable = new GasType(gasRisingFlammable, gasPipeRisingFlammable, 3, "Green gas", 0x6F7F6F, 1, -12, Combustibility.FLAMMABLE).setEffectRates(2, 2, 0);
 		gasTypeFallingExplosive = new GasType(gasFallingExplosive, gasPipeFallingExplosive, 4, "Red gas", 0x7F4F4F, 3, 4, Combustibility.EXPLOSIVE).setEffectRates(1, 2, 0);
 		gasTypeVoid = new GasType(gasVoid, gasPipeVoid, 5, "Void gas", 0x1F1F1F, 4, 8, Combustibility.NONE).setEffectRates(20, 4, 0).setDamage(1.0F);
 		gasTypeElectric = new GasType(gasElectric, gasPipeElectric, 6, "Electric gas", 0x1F7F7F, 0, 0, Combustibility.NONE).setEffectRates(4, 2, 0);
 		gasTypeCorrosive = new GasType(gasCorrosive, gasPipeCorrosive, 7, "Corrosive gas", 0x1F1FDF, 0, 0, Combustibility.NONE).setEffectRates(4, 2, 0).setDamage(0.5F);
 		gasTypeNitrous = new GasTypePoisonous(gasNitrous, gasPipeNitrous, 8, "Nitrous gas", 0x6F3F2F, 3, 4, Combustibility.NONE).setEffectRates(1, 4, 0);
-		gasTypeAcidVapour = new GasType(gasAcidVapour, gasPipeAcidVapour, 9, "Acidic vapour", 0x4F7FBF, 0, -20, Combustibility.NONE).setEffectRates(20, 1, 0).setDamage(2.0F).setEvaporationRate(2);
+		gasTypeAcidVapour = new GasType(gasAcidVapour, 9, "Acidic vapour", 0x4F7FBF, 0, -20, Combustibility.NONE).setEffectRates(20, 1, 0).setDamage(2.0F).setEvaporationRate(2);
+		gasTypeCoalDust = new GasType(gasCoalDust, 10, "Coal dust", 0x2F2F2F, 0, 0, Combustibility.HIGHLY_EXPLOSIVE).setEffectRates(1, 6, 0).setEvaporationRate(10);
 	}
 	
 	@EventHandler
@@ -132,11 +134,11 @@ public class Gases
 		
 		initBlocksAndItems();
 		
-		generateGreenGas = config.get("world", "generateGreenGas", true).getBoolean(true);
-		generateRedGas = config.get("world", "generateRedGas", true).getBoolean(true);
-		generateNitrousGas = config.get("world", "generateNitrousGas", true).getBoolean(true);
-		generateElectricGas = config.get("world", "generateElectricGas", true).getBoolean(true);
-		generateCorrosiveGas = config.get("world", "generateCorrosiveGas", true).getBoolean(true);
+		generateGreenGas = config.get("world", "generateGreenGasAmount", true).getInt(6);
+		generateRedGas = config.get("world", "generateRedGasAmount", true).getInt(3);
+		generateNitrousGas = config.get("world", "generateNitrousGasAmount", true).getInt(3);
+		generateElectricGas = config.get("world", "generateElectricGasAmount", true).getInt(4);
+		generateCorrosiveGas = config.get("world", "generateCorrosiveGasAmount", true).getInt(4);
 		voidGasMaxHeight = config.get("gases", "voidGasMaxHeight", true).getInt(64);
 		maxHardnessForCorrosion = Float.parseFloat(config.get("gases", "maxHardnessForCorrosion", 2.0F).getString());
 		enableUpdateCheck = config.get("other", "enableUpdateCheck", true).getBoolean(true);
@@ -175,6 +177,7 @@ public class Gases
 		LanguageRegistry.addName(gasCorrosive, "Corrosive Gas");
 		LanguageRegistry.addName(gasNitrous, "Nitrous Gas");
 		LanguageRegistry.addName(gasAcidVapour, "Acidic Vapour");
+		LanguageRegistry.addName(gasCoalDust, "Coal Dust");
 		LanguageRegistry.addName(lanternTorch, "Lantern with Torch");
 		LanguageRegistry.addName(lanternGlowstone, "Lantern with Glowstone");
 		

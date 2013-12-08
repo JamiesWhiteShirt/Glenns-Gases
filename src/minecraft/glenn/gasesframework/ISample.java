@@ -2,10 +2,15 @@ package glenn.gasesframework;
 
 import net.minecraft.world.World;
 
+/**
+ * An interface for interactivity with gas samplers.
+ * @author Glenn
+ *
+ */
 public interface ISample
 {
 	/**
-	 * Called upon right clicked with sampler. Returns the new gas type to be used for the sampler.
+	 * Called when right clicked with sampler. Returns the new gas type to be used for the sampler. Return "in" if nothing is sampled.
 	 * @param world
 	 * @param x
 	 * @param y

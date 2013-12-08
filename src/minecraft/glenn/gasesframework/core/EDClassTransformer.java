@@ -57,6 +57,7 @@ public class EDClassTransformer implements IClassTransformer
 		c.put("Tessellator", "bfq");
 		c.put("WorldClient", "bdd");
 		c.put("GuiIngame", "avj");
+		c.put("IBlockAccess", "acf");
 	}
 	
 	@Override
@@ -511,6 +512,8 @@ public class EDClassTransformer implements IClassTransformer
 		String classEntity = obfuscated ? c.get("Entity") : "net/minecraft/entity/Entity";
 		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
 		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
+		
+		String interfaceBlockAccess = obfuscated ? c.get("IBlockAccess") : "net/minecraft/world/IBlockAccess";
 
 		String methodIsInsideOfMaterial = obfuscated ? "a" : "isInsideOfMaterial";
 		String methodGetBlockMetadata = obfuscated ? "h" : "getBlockMetadata";
@@ -560,11 +563,17 @@ public class EDClassTransformer implements IClassTransformer
 						newInstructions.add(new TypeInsnNode(CHECKCAST, "glenn/gasesframework/BlockGas"));
 						newInstructions.add(new VarInsnNode(ALOAD, 0));
 						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
+						newInstructions.add(new TypeInsnNode(CHECKCAST, interfaceBlockAccess));
+						newInstructions.add(new VarInsnNode(ILOAD, 4));
+						newInstructions.add(new VarInsnNode(ILOAD, 5));
+						newInstructions.add(new VarInsnNode(ILOAD, 6));
+						newInstructions.add(new VarInsnNode(ALOAD, 0));
+						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 4));
 						newInstructions.add(new VarInsnNode(ILOAD, 5));
 						newInstructions.add(new VarInsnNode(ILOAD, 6));
 						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMetadata, "(III)I"));
-						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/BlockGas", "getMinY", "(I)D"));
+						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/BlockGas", "getMinY", "(L" + interfaceBlockAccess + ";IIII)D"));
 						newInstructions.add(new InsnNode(DCMPL));
 						LabelNode l8 = new LabelNode();
 						newInstructions.add(new JumpInsnNode(IFLE, l8));
@@ -578,11 +587,17 @@ public class EDClassTransformer implements IClassTransformer
 						newInstructions.add(new TypeInsnNode(CHECKCAST, "glenn/gasesframework/BlockGas"));
 						newInstructions.add(new VarInsnNode(ALOAD, 0));
 						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
+						newInstructions.add(new TypeInsnNode(CHECKCAST, interfaceBlockAccess));
+						newInstructions.add(new VarInsnNode(ILOAD, 4));
+						newInstructions.add(new VarInsnNode(ILOAD, 5));
+						newInstructions.add(new VarInsnNode(ILOAD, 6));
+						newInstructions.add(new VarInsnNode(ALOAD, 0));
+						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 4));
 						newInstructions.add(new VarInsnNode(ILOAD, 5));
 						newInstructions.add(new VarInsnNode(ILOAD, 6));
 						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMetadata, "(III)I"));
-						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/BlockGas", "getMaxY", "(I)D"));
+						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/BlockGas", "getMaxY", "(L" + interfaceBlockAccess + ";IIII)D"));
 						newInstructions.add(new InsnNode(DCMPG));
 						newInstructions.add(new JumpInsnNode(IFGE, l8));
 						newInstructions.add(new InsnNode(ICONST_1));

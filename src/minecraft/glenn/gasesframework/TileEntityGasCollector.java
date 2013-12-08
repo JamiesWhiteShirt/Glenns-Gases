@@ -48,7 +48,7 @@ public class TileEntityGasCollector extends TileEntityPump
 						if(directionBlockID != 0 && directionBlock instanceof BlockGas)
 						{
 							BlockGas gasBlock = (BlockGas)directionBlock;
-							if(acceptsType(gasBlock.type))
+							if(gasBlock.type.isIndustrial() && acceptsType(gasBlock.type))
 							{
 								worldObj.setBlockToAir(x1, y1, z1);
 								

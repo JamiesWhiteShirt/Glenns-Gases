@@ -44,13 +44,6 @@ public class BlockGas extends Block implements ISample
 	/**
 	 * Constructs a new gas block.
 	 * @param id - The block ID to be used by this gas block.
-	 * @param color - An RGB representation of the color to be used by this gas.
-	 * @param opacity - Higher values will increase the opacity of this gas. This will also affect how well light passes through it.
-	 * @param density - A value determining how dense the gas will be relative to air.
-	 * <ul><li><b>density > 0</b> Will produce a falling gas. Greater values means the gas will move faster.</li>
-	 * <li><b>density < 0</b> Will produce a rising gas. Lower values means the gas will move faster.</li>
-	 * <li><b>density = 0</b> Will produce a floating gas which will spread in all directions.</li></ul>
-	 * @param combustibility - The block's combustibility
 	 */
     public BlockGas(int id)
     {
@@ -58,6 +51,7 @@ public class BlockGas extends Block implements ISample
 		
 		this.setTickRandomly(true);
 		this.disableStats();
+		this.setHardness(0.0F);
     }
 
     /*public boolean getBlocksMovement(IBlockAccess par1IBlockAccess, int par2, int par3, int par4)
@@ -65,13 +59,13 @@ public class BlockGas extends Block implements ISample
         return this.blockMaterial != Material.lava;
     }*/
 
-    public AxisAlignedBB getSelectedBoundingBoxFromPool(World par1World, int par2, int par3, int par4)
+    public AxisAlignedBB getSelectedBoundingBoxFromPool(World world, int i, int j, int k)
     {
-    	int metadata = par1World.getBlockMetadata(par2, par3, par4);
-    	double minY = getMinY(metadata);
-    	double maxY = getMaxY(metadata);
+    	int metadata = world.getBlockMetadata(i, j, k);
+    	double minY = getMinY(world, i, j, k, metadata);
+    	double maxY = getMaxY(world, i, j, k, metadata);
 
-    	return AxisAlignedBB.getAABBPool().getAABB((double)par2, (double)par3 + minY, (double)par4, (double)par2 + 1.0D, (double)par3 + maxY, (double)par4 + 1.0D);
+    	return AxisAlignedBB.getAABBPool().getAABB((double)i, (double)j + minY, (double)k, (double)i + 1.0D, (double)j + maxY, (double)k + 1.0D);
     }
     
     public void onEntityCollidedWithBlock(World par1World, int par2, int par3, int par4, Entity par5Entity)
@@ -131,39 +125,39 @@ public class BlockGas extends Block implements ISample
      * Returns true if the given side of this block type should be rendered, if the adjacent block is at the given
      * coordinates.  Args: blockAccess, x, y, z, side
      */
-    public boolean shouldSideBeRendered(IBlockAccess par1IBlockAccess, int par2, int par3, int par4, int par5)
+    public boolean shouldSideBeRendered(IBlockAccess blockAccess, int i, int j, int k, int side)
     {
-    	int xDirection = par5 == 4 ? 1 : (par5 == 5 ? -1 : 0);
-    	int yDirection = par5 == 0 ? 1 : (par5 == 1 ? -1 : 0);
-    	int zDirection = par5 == 2 ? 1 : (par5 == 3 ? -1 : 0);
+    	int xDirection = side == 4 ? 1 : (side == 5 ? -1 : 0);
+    	int yDirection = side == 0 ? 1 : (side == 1 ? -1 : 0);
+    	int zDirection = side == 2 ? 1 : (side == 3 ? -1 : 0);
     	
-		int metadata = par1IBlockAccess.getBlockMetadata(par2, par3, par4);
-		int directionBlockID = par1IBlockAccess.getBlockId(par2 + xDirection, par3 + yDirection, par4 + zDirection);
-		int directionBlockMetadata = par1IBlockAccess.getBlockMetadata(par2 + xDirection, par3 + yDirection, par4 + zDirection);
+		int metadata = blockAccess.getBlockMetadata(i, j, k);
+		int directionBlockID = blockAccess.getBlockId(i + xDirection, j + yDirection, k + zDirection);
+		int directionBlockMetadata = blockAccess.getBlockMetadata(i + xDirection, j + yDirection, k + zDirection);
     	
-    	if(par5 == 1)
+    	if(side == 1)
     	{
     		Block block = Block.blocksList[directionBlockID];
     		
     		if(block instanceof BlockGas)
     		{
-    			double maxY = ((BlockGas)block).getMaxY(directionBlockMetadata);
+    			double maxY = ((BlockGas)block).getMaxY(blockAccess, i, j, k, directionBlockMetadata);
     			
-    			return maxY - 1.0D != getMinY(metadata);
+    			return maxY - 1.0D != getMinY(blockAccess, i, j, k, metadata);
     		} else
     		{
     			return true;
     		}
     	}
-    	else if(par5 == 0)
+    	else if(side == 0)
     	{
     		Block block = Block.blocksList[directionBlockID];
     		
     		if(block instanceof BlockGas)
     		{
-    			double minY = ((BlockGas)block).getMinY(directionBlockMetadata);
+    			double minY = ((BlockGas)block).getMinY(blockAccess, i, j, k, directionBlockMetadata);
     			
-    			return minY != getMaxY(metadata)- 1.0D ;
+    			return minY != getMaxY(blockAccess, i, j, k, metadata)- 1.0D ;
     		} else
     		{
     			return true;
@@ -171,7 +165,7 @@ public class BlockGas extends Block implements ISample
     	}
     	else
     	{
-    		return (directionBlockID == blockID & metadata < directionBlockMetadata) | directionBlockID != blockID;
+    		return true;
     	}
     }
     
@@ -183,17 +177,21 @@ public class BlockGas extends Block implements ISample
      * @param par4
      * @return
      */
-    public double sideIndent(IBlockAccess par1IBlockAccess, int par2, int par3, int par4)
+    public final double sideIndent(IBlockAccess par1IBlockAccess, int par2, int par3, int par4)
     {
     	return par1IBlockAccess.isBlockOpaqueCube(par2, par3, par4) ? 0.001D : 0.0D;
     }
     
     /**
-     * Gets the height of the bottom side of the gas
+     * Get the height of the bottom side of the gas
+     * @param blockAccess
+     * @param i
+     * @param j
+     * @param k
      * @param metadata
      * @return
      */
-    public double getMinY(int metadata)
+    public double getMinY(IBlockAccess blockAccess, int i, int j, int k, int metadata)
     {
     	if(type.density > 0)
     	{
@@ -204,17 +202,26 @@ public class BlockGas extends Block implements ISample
     		return (double)metadata / 16.0D;
     	} else
     	{
-    		double d = 0.5D - (double)(16 - metadata) / 8.0D;
+    		if(blockAccess.getBlockId(i, j - 1, k) == blockID)
+    		{
+    			return 0.0D;
+    		}
+    		boolean b = blockAccess.getBlockId(i, j + 1, k) == blockID;
+    		double d = (0.5D - (double)(16 - metadata) / 8.0D) * (b ? 2.0D : 1.0D);
     		return d < 0.0D ? 0.0D : d;
     	}
     }
     
     /**
-     * Gets the height of the top side of the gas
+     * Get the height of the top side of the gas
+     * @param blockAccess
+     * @param i
+     * @param j
+     * @param k
      * @param metadata
      * @return
      */
-    public double getMaxY(int metadata)
+    public double getMaxY(IBlockAccess blockAccess, int i, int j, int k, int metadata)
     {
     	if(type.density > 0)
     	{
@@ -225,7 +232,12 @@ public class BlockGas extends Block implements ISample
     		return 1.0D;
     	} else
     	{
-    		double d = 0.5D + (double)(16 - metadata) / 8.0D;
+    		if(blockAccess.getBlockId(i, j + 1, k) == blockID)
+    		{
+    			return 1.0D;
+    		}
+    		boolean b = blockAccess.getBlockId(i, j - 1, k) == blockID;
+    		double d = 1.0D - (0.5D - (double)(16 - metadata) / 8.0D) * (b ? 2.0D : 1.0D);
     		return d > 1.0D ? 1.0D : d;
     	}
     }
@@ -299,8 +311,9 @@ public class BlockGas extends Block implements ISample
 		{
 	        if (!par1World.isRemote)
 	        {
+	        	float power = (16.0F - par1World.getBlockMetadata(par2, par3, par4)) / 16.0F + 0.25F;
 	        	par1World.setBlock(par2, par3, par4, 0);
-	        	par1World.createExplosion(null, (double)par2 + 0.5D, (double)par3 + 0.5D, (double)par4 + 0.5D, type.combustibility.explosionPower * GasesFramework.gasExplosionFactor, true);
+	        	par1World.createExplosion(null, (double)par2 + 0.5D, (double)par3 + 0.5D, (double)par4 + 0.5D, type.combustibility.explosionPower * GasesFramework.gasExplosionFactor * power, true);
 	        }
 	        return true;
 		}
@@ -308,9 +321,11 @@ public class BlockGas extends Block implements ISample
 		{
 			par1World.setBlock(par2, par3, par4, Block.fire.blockID);
 			
-			int xDirection = par5Random.nextInt(3) - 1;
-    		int yDirection = par5Random.nextInt(3) - 1;
-    		int zDirection = par5Random.nextInt(3) - 1;
+			int side = par5Random.nextInt(6);
+			
+			int xDirection = side == 4 ? 1 : (side == 5 ? -1 : 0);
+	    	int yDirection = side == 0 ? 1 : (side == 1 ? -1 : 0);
+	    	int zDirection = side == 2 ? 1 : (side == 3 ? -1 : 0);
     		
     		if(par1World.isAirBlock(par2 + xDirection, par3 + yDirection, par4 + zDirection))
     		{
@@ -511,6 +526,8 @@ public class BlockGas extends Block implements ISample
         	int[] metadataList = new int[6];
     		int[] priorityList = new int[6];
     		int surroundingAirBlocks = 0;
+    		int totalFlow = 0;
+    		int prevMetadata = metadata;
 
     		for(int i = 0; i < 6; i++)
     		{
@@ -525,9 +542,14 @@ public class BlockGas extends Block implements ISample
     			{
     				direction2BlockMetadata = -1;
     				surroundingAirBlocks++;
+    				totalFlow += 8;
     			} else if(direction2BlockID != this.blockID)
     			{
     				direction2BlockMetadata = 17;
+    			}
+    			else if(direction2BlockMetadata < metadata - 1)
+    			{
+    				totalFlow += (metadata - direction2BlockMetadata) / 2;
     			}
 
     			for(int j = 0; j < 6; j++)
@@ -564,14 +586,22 @@ public class BlockGas extends Block implements ISample
     			{
     				if(direction2BlockMetadata == -1)
     				{
-    					par1World.setBlock(par2 + xDirection, par3 + yDirection, par4 + zDirection, this.blockID, 15, 3);
+    					int flow = prevMetadata / 2;
+    					int transaction = flow * 16 / (totalFlow + 8);
+    					
+    					if(transaction < 1) transaction = 1;
+						par1World.setBlock(par2 + xDirection, par3 + yDirection, par4 + zDirection, this.blockID, 16 - transaction, 3);
     					requiresTick = false;
-        				metadata--;
+        				metadata -= transaction;
     				} else if(direction2BlockMetadata < 16 & direction2BlockMetadata + 1 < metadata)
     				{
-    					par1World.setBlockMetadataWithNotify(par2 + xDirection, par3 + yDirection, par4 + zDirection, 15 - direction2BlockMetadata, 3);
+    					int flow = (prevMetadata - direction2BlockMetadata) / 2;
+    					int transaction = flow * 16 / (totalFlow + 8);
+
+    					if(transaction < 1) transaction = 1;
+    					par1World.setBlockMetadataWithNotify(par2 + xDirection, par3 + yDirection, par4 + zDirection, 16 - direction2BlockMetadata - transaction, 3);
     					requiresTick = false;
-        				metadata--;
+        				metadata -= transaction;
     				}
     			}
     		}
@@ -654,6 +684,8 @@ public class BlockGas extends Block implements ISample
     		int[] metadataList = new int[4];
     		int[] priorityList = new int[4];
     		int surroundingAirBlocks = 0;
+    		int totalFlow = 0;
+    		int prevMetadata = metadata;
     		
     		for(int i = 0; i < 4; i++)
     		{
@@ -667,9 +699,19 @@ public class BlockGas extends Block implements ISample
     			{
     				direction2BlockMetadata = -1;
     				surroundingAirBlocks++;
+    				totalFlow += 8;
     			} else if(direction2BlockID != this.blockID)
     			{
     				direction2BlockMetadata = 17;
+    			}
+    			else if(direction2BlockMetadata < metadata - 1)
+    			{
+    				int flow = (metadata - direction2BlockMetadata) / 2;
+    				if(direction2BlockMetadata + flow > 16)
+    				{
+    					flow = 16 - direction2BlockMetadata;
+    				}
+    				totalFlow += flow;
     			}
 
     			for(int j = 0; j < 4; j++)
@@ -753,14 +795,36 @@ public class BlockGas extends Block implements ISample
     			{
     				if(direction2BlockMetadata == -1)
     				{
-    					par1World.setBlock(par2 + xDirection, par3, par4 + zDirection, this.blockID, 15, 3);
+    					int flow = prevMetadata / 2;
+    					int transaction = flow * 16 / (totalFlow + 8);
+    					
+    					if(direction2BlockMetadata + transaction > 16)
+        				{
+        					transaction = 16 - direction2BlockMetadata;
+        				}
+    					else if(transaction < 1)
+    					{
+    						transaction = 1;
+    					}
+						par1World.setBlock(par2 + xDirection, par3, par4 + zDirection, this.blockID, 16 - transaction, 3);
     					requiresTick = false;
-        				metadata--;
+        				metadata -= transaction;
     				} else if(direction2BlockMetadata < 16 & direction2BlockMetadata + 1 < metadata)
     				{
-    					par1World.setBlockMetadataWithNotify(par2 + xDirection, par3, par4 + zDirection, 15 - direction2BlockMetadata, 3);
+    					int flow = (prevMetadata - direction2BlockMetadata) / 2;
+    					int transaction = flow * 16 / (totalFlow + 8);
+
+    					if(direction2BlockMetadata + transaction > 16)
+        				{
+        					transaction = 16 - direction2BlockMetadata;
+        				}
+    					else if(transaction < 1)
+    					{
+    						transaction = 1;
+    					}
+    					par1World.setBlockMetadataWithNotify(par2 + xDirection, par3, par4 + zDirection, 16 - direction2BlockMetadata - transaction, 3);
     					requiresTick = false;
-        				metadata--;
+        				metadata -= transaction;
     				}
     			}
     		}
@@ -828,9 +892,10 @@ public class BlockGas extends Block implements ISample
     	onBlockAdded(par1World, par2, par3, par4);
     }
 
-    public void onBlockDestroyedByExplosion(World par1World, int par2, int par3, int par4, Explosion par5Explosion)
+    //public void onBlockDestroyedByExplosion(World par1World, int par2, int par3, int par4, Explosion par5Explosion)
+    public void onBlockExploded(World world, int x, int y, int z, Explosion explosion)
     {
-    	onFire(par1World, par2, par3, par4, par1World.rand);
+    	onFire(world, x, y, z, world.rand);
     }
 
     public boolean func_82506_l()

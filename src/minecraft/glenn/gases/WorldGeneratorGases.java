@@ -44,14 +44,14 @@ public class WorldGeneratorGases implements IWorldGenerator
 		
 		if(chunkGenerator instanceof ChunkProviderHell)
 		{
-			if(Gases.generateElectricGas) this.genOreWithChance(4, this.electricGasGen, 40, 128, 4);
-			if(Gases.generateCorrosiveGas) this.genOreWithChance(4, this.corrosiveGasGen, 40, 128, 4);
+			this.genOreWithChance(Gases.generateElectricGas, this.electricGasGen, 40, 128, 4);
+			this.genOreWithChance(Gases.generateCorrosiveGas, this.corrosiveGasGen, 40, 128, 4);
 		}
 		else if(chunkGenerator instanceof ChunkProviderGenerate)
 		{
-			if(Gases.generateGreenGas) this.genStandardOre1(6, this.risingFlammableGasGen, 16, 48);
-			if(Gases.generateRedGas) this.genStandardOre1(3, this.fallingExplosiveGasGen, 0, 16);
-			if(Gases.generateNitrousGas) this.genStandardOre1(3, this.nitrousGasGen, 0, 16);
+			this.genStandardOre1(Gases.generateGreenGas, this.risingFlammableGasGen, 16, 48);
+			this.genStandardOre1(Gases.generateRedGas, this.fallingExplosiveGasGen, 0, 16);
+			this.genStandardOre1(Gases.generateNitrousGas, this.nitrousGasGen, 0, 16);
 		}
 	}
 

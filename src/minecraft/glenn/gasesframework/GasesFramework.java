@@ -59,7 +59,7 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
 public class GasesFramework
 {
 	// The instance of your mod that Forge uses.
-	@Instance("GasesFramework")
+	@Instance("gasesFramework")
 	public static GasesFramework instance;
 	
 	// Says where the client and server 'proxy' code is loaded.
@@ -137,7 +137,7 @@ public class GasesFramework
 	public static GasType gasTypeAir;
 	
 	/**
-	 * The creative tab labeled Glenn's Gases.
+	 * The creative tab nameded Glenn's Gases. Has a lantern icon.
 	 */
 	public static CreativeTabs creativeTab = new CreativeTabs("tabGases")
 	{
@@ -175,8 +175,6 @@ public class GasesFramework
 		GameRegistry.registerBlock(lanternGas3 = (BlockLantern)(new BlockLantern(a("lanternGas3ID", 557), Combustibility.HIGHLY_FLAMMABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas3").setTextureName("gases:lantern_gas0_on"), "lanternGas3");
 		GameRegistry.registerBlock(lanternGas4 = (BlockLantern)(new BlockLantern(a("lanternGas4ID", 558), Combustibility.EXPLOSIVE)).setLightValue(1.0F).setUnlocalizedName("lanternGas4").setTextureName("gases:lantern_gas0_on"), "lanternGas4");
 		GameRegistry.registerBlock(lanternGas5 = (BlockLantern)(new BlockLantern(a("lanternGas5ID", 559), Combustibility.HIGHLY_EXPLOSIVE)).setLightValue(1.0F).setUnlocalizedName("lanternGas5").setTextureName("gases:lantern_gas0_on"), "lanternGas5");
-		
-		gasTypeAir = new GasTypeAir();
 	}
 	
 	@EventHandler
@@ -189,6 +187,11 @@ public class GasesFramework
 		
 		gasExplosionFactor = Float.parseFloat(config.get("gases", "gasExplosionFactor", 2.5F).getString());
 		gasFurnaceHeatingSpeed = config.get("other", "gasFurnaceHeatingSpeed", 2).getInt();
+		String[] additionalIgnitionBlocks = config.get("other", "additionalIgnitionBlocks", new String[0]).getStringList();
+		for(String s : additionalIgnitionBlocks)
+		{
+			registerIgnitionBlock(Integer.parseInt(s));
+		}
 		
 		config.save();
 		
@@ -260,11 +263,23 @@ public class GasesFramework
 		
 	}
 	
+	/**
+	 * Tidier code is better, am I right?
+	 * @param name
+	 * @param def
+	 * @return
+	 */
 	private static int a(String name, int def)
 	{
 		return config.getBlock(name, def).getInt();
 	}
 	
+	/**
+	 * Tidier code is better, am I right?
+	 * @param name
+	 * @param def
+	 * @return
+	 */
 	private static int b(String name, int def)
 	{
 		return config.getItem(name, def).getInt();
@@ -311,7 +326,7 @@ public class GasesFramework
 	}
 	
 	/**
-	 * Gets the reaction between 2 blocks from their IDs.
+	 * Gets the reaction between 2 blocks from their IDs. Returns an empty reaction if it doesn't exist (not null)
 	 * @param block1ID
 	 * @param block2ID
 	 * @return
@@ -326,7 +341,7 @@ public class GasesFramework
 		return new ReactionEmpty();
 	}
 	
-	/*
+	/**
 	 * Returns the reverse direction index of a direction index. Used by most blocks in Gases Framework.
 	 */
 	public static int reverseDirection(int direction)

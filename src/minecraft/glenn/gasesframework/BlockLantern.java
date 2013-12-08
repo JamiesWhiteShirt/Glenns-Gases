@@ -26,14 +26,6 @@ public class BlockLantern extends Block
 		lanternRecipes.add(new LanternRecipeGas());
 	}
 	
-	/**
-	 * Creates a new lantern block.
-	 * @param blockID - The ID of the block.
-	 * @param containedItemIn - The item/block which can be used with a lantern to create this lantern.
-	 * @param containedItemOut - The item/block which will be ejected by this lantern. For instance, gas lanterns accept bottles of gas but eject empty bottles.
-	 * @param tickrate - The rate at which the lantern will burn out. Set to 0 for non-expiring lanterns.
-	 * @param expirationBlockID - The ID of the block this lantern will become when expired or destroyed. If -1, will become the block ID.
-	 */
 	public BlockLantern(int blockID, Combustibility combustibility)
 	{
 		super(blockID, Material.iron);
@@ -71,7 +63,6 @@ public class BlockLantern extends Block
         }
 		
 		lanternRecipes.add(new LanternRecipe(containedItemIn, this));
-		//GameRegistry.addShapelessRecipe(new ItemStack(this), new ItemStack(GasesFramework.lanternEmpty), containedItemIn.copy());
 		GasesFramework.queueLanternRecipe(new ItemStack(this), containedItemIn.copy());
 	}
 	

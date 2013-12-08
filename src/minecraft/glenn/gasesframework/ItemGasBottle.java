@@ -90,7 +90,7 @@ public class ItemGasBottle extends Item
     {
         for (int i = 1; i < GasType.gasTypes.length; i++)
         {
-        	if(GasType.gasTypes[i] != null)
+        	if(GasType.gasTypes[i] != null && GasType.gasTypes[i].isIndustrial())
         	{
         		par3List.add(new ItemStack(par1, 1, i));
         	}

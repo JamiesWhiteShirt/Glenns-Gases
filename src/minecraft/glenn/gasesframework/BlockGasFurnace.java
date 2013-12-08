@@ -138,7 +138,6 @@ public class BlockGasFurnace extends BlockContainer implements IGasReceptor
 
             if (tileentityfurnace != null)
             {
-                //par5EntityPlayer.displayGUIFurnace(tileentityfurnace);
             	par5EntityPlayer.openGui(GasesFramework.instance, 0, par1World, par2, par3, par4);
             }
 

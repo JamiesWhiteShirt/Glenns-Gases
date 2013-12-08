@@ -11,6 +11,14 @@ public class BlockLanternSpecial extends BlockLantern
 	public ItemStack containedItemOut;
 	public BlockLantern expirationBlock;
 	
+	/**
+	 * Creates a new lantern which contains certain items and can eject another item in return.
+	 * @param blockID - The ID of the block.
+	 * @param tickrate - The rate at which the lantern will burn out. Set to 0 for non-expiring lanterns.
+	 * @param containedItemIn - The item/block which can be used with a lantern to create this lantern.
+	 * @param containedItemOut - The item/block which will be ejected by this lantern. For instance, gas lanterns accept bottles of gas but eject empty bottles.
+	 * @param expirationBlock - The block this lantern will become when expired or destroyed.
+	 */
 	public BlockLanternSpecial(int blockID, int tickrate, ItemStack containedItemIn, ItemStack containedItemOut, BlockLantern expirationBlock)
 	{
 		super(blockID, null, tickrate, containedItemIn);

@@ -319,8 +319,13 @@ public class EDClassTransformer implements IClassTransformer
 
 	public byte[] patchClassBlock(byte[] data, boolean obfuscated)
 	{
-		String fieldBedrock = obfuscated ? "E" : "bedrock";
+		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
 
+		String fieldBedrock = obfuscated ? "E" : "bedrock";
+		String fieldOreCoal = obfuscated ? "N" : "oreCoal";
+		
+		String methodSetHardness = obfuscated ? "c" : "setHardness";
+		
 		ClassNode classNode = new ClassNode();
 		ClassReader classReader = new ClassReader(data);
 		classReader.accept(classNode, 0);
@@ -356,6 +361,32 @@ public class EDClassTransformer implements IClassTransformer
 								{
 									MethodInsnNode methodInstruction = (MethodInsnNode)newInstruction;
 									methodInstruction.owner = "glenn/gases/BlockBedrock";
+								}
+							}
+						}
+						else if(fieldInstruction.name.equals(fieldOreCoal))
+						{
+							for(int i = instructionIndex - 1; i > 0; i--)
+							{
+								AbstractInsnNode newInstruction = method.instructions.get(i);
+								if(newInstruction.getOpcode() == NEW)
+								{
+									TypeInsnNode newTypeInstruction = (TypeInsnNode)newInstruction;
+									newTypeInstruction.desc = "glenn/gases/BlockCoalOre";
+									break;
+								}
+								else if(newInstruction.getOpcode() == INVOKESPECIAL)
+								{
+									MethodInsnNode methodInstruction = (MethodInsnNode)newInstruction;
+									methodInstruction.owner = "glenn/gases/BlockCoalOre";
+								}
+								else if(newInstruction.getOpcode() == INVOKEVIRTUAL)
+								{
+									MethodInsnNode methodInstruction = (MethodInsnNode)newInstruction;
+									if(methodInstruction.name.equals(methodSetHardness) && methodInstruction.desc.equals("(F)L" + classBlock + ";"))
+									{
+										methodInstruction.owner = "glenn/gases/BlockCoalOre";
+									}
 								}
 							}
 						}

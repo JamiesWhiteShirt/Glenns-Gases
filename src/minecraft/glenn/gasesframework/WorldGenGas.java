@@ -11,19 +11,28 @@ public class WorldGenGas extends WorldGenerator
 {
     /** The block ID of the ore to be placed using this generator. */
     private int minableBlockId;
+    /** The metadata of the ore to be placed using this generator. */
     private int minableBlockMetadata;
 
-    /** The number of blocks to generate. */
+    /** The number of blocks to minimally generate. */
     private int numberOfBlocksMin;
+    /** The number of blocks to maxmimally generate. */
     private int numberOfBlocksMax;
     private int field_94523_c;
-
-    public WorldGenGas(int par1, int par2, int par3, int par4)
+    
+    /**
+     * Creates a new gas world generator. Gas generators are much like ore generators with the exception of the size being variable, and no generated blocks are visible on cave surfaces.
+     * @param blockID - ID of the block to be generated
+     * @param blockMetadata - Metadata of the block to be generated
+     * @param min - The minimal amount of blocks to generate
+     * @param max - The maximal amount of blocks to generate
+     */
+    public WorldGenGas(int blockID, int blockMetadata, int min, int max)
     {
-        this.minableBlockId = par1;
-        this.minableBlockMetadata = par2;
-        numberOfBlocksMin = par3;
-        numberOfBlocksMax = par4;
+        this.minableBlockId = blockID;
+        this.minableBlockMetadata = blockMetadata;
+        numberOfBlocksMin = min;
+        numberOfBlocksMax = max;
         this.field_94523_c = Block.stone.blockID;
     }
 

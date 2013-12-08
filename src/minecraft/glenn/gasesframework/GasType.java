@@ -12,26 +12,68 @@ import net.minecraft.util.DamageSource;
 
 public class GasType
 {
+	/**
+	 * All gas indexed by their gas index
+	 */
 	public static final GasType[] gasTypes = new GasType[256];
 	
+	/**
+	 * The gas block associated with this gas type.
+	 */
 	public final BlockGas gasBlock;
+	/**
+	 * The gas pipe associated with this gas type. Can be null.
+	 */
 	public final BlockGasPipe gasPipe;
+	/**
+	 * The gas index of this gas type.
+	 */
 	public final int gasIndex;
+	/**
+	 * A display-friendly name for this gas type.
+	 */
 	public final String name;
+	/**
+	 * The color of this gas type, represented as an RGB hex.
+	 */
 	public final int color;
+	/**
+	 * The opacity of this gas type. A highly opaque gas will block more light.
+	 */
 	public final int opacity;
+	/**
+	 * The density of this gas type. A negative density will make a rising gas. A positive density will make a falling gas. If The density is 0, the gas will spread evenly in all directions.
+	 */
 	public final int density;
 	
+	/**
+	 * The combustibility of this gas. See {@link glenn.gasesframework.Combustibility Combustibility}.
+	 */
 	public final Combustibility combustibility;
+	/**
+	 * How quickly this gas type will evaporate in the world. Higher values will decrease evaporation speed.
+	 */
 	public int evaporationRate;
+	/**
+	 * The damage this gas deals upon touch.
+	 */
 	public float damage;
 	
+	/**
+	 * The rate at which gas of this type will cause blindness.
+	 */
 	public int blindnessRate;
+	/**
+	 * The rate at which gas of this type will cause suffocation. For higher values, the player will suffocate earlier and will take damage more frequently.
+	 */
 	public int suffocationRate;
+	/**
+	 * How much this gas will gradually slow down the player. NOTE: NOT IMPLEMENTED.
+	 */
 	public int slownessRate;
 	
 	/**
-	 * 
+	 * Creates a new industrial gas type. Gas types are automatically registered.
 	 * @param gasBlock - The gas block associated with this GasType.
 	 * @param gasPipe - The gas pipe associated with this GasType. Can be null if set to non-industrial.
 	 * @param gasIndex - An unique index for the GasType. Consult the Gases Framework documentation for unoccupied gas IDs.
@@ -91,6 +133,24 @@ public class GasType
 	}
 	
 	/**
+	 * Creates a new non-industrial gas type. Gas types are automatically registered.
+	 * @param gasBlock - The gas block associated with this GasType.
+	 * @param gasIndex - An unique index for the GasType. Consult the Gases Framework documentation for unoccupied gas IDs.
+	 * @param name - A display-friendly name for the gas type.
+	 * @param color - An RGB representation of the color to be used by this gas.
+	 * @param opacity - Higher values will increase the opacity of this gas. This will also affect how well light passes through it.
+	 * @param density - A value determining how dense the gas will be relative to air.
+	 * <ul><li><b>density > 0</b> Will produce a falling gas. Greater values means the gas will move faster.</li>
+	 * <li><b>density < 0</b> Will produce a rising gas. Lower values means the gas will move faster.</li>
+	 * <li><b>density = 0</b> Will produce a floating gas which will spread in all directions.</li></ul>
+	 * @param combustibility - The grade of combustibility of this gas type.
+	 */
+	public GasType(BlockGas gasBlock, int gasIndex, String name, int color, int opacity, int density, Combustibility combustibility)
+	{
+		this(gasBlock, null, gasIndex, name, color, opacity, density, combustibility);
+	}
+	
+	/**
 	 * Sets the rates of gas effects on this gas type.
 	 * @param blindness - How quickly the player will experience gradual blindness.
 	 * @param suffocation - How quickly the player will suffocate in the gas, and how often {@link GasType#onBreathed(EntityLivingBase)} will be called
@@ -117,7 +177,7 @@ public class GasType
 	}
 	
 	/**
-	 * Set how quickly the gas can evaporate in parts per tick.
+	 * Set how quickly the gas can evaporate. Higher values will decrease evaporation speed.
 	 * @param evaporation
 	 * @return
 	 */
@@ -144,5 +204,14 @@ public class GasType
 	public void onBreathed(EntityLivingBase entity)
 	{
 		entity.attackEntityFrom(DamageSource.generic, 0.5F);
+	}
+	
+	/**
+	 * Can this gas be used in pipes and can it be bottled?
+	 * @return
+	 */
+	public boolean isIndustrial()
+	{
+		return gasPipe != null;
 	}
 }
