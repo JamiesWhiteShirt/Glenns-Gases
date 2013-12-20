@@ -118,9 +118,9 @@ public class BlockGasFurnace extends BlockContainer implements IGasReceptor
      */
     public void registerIcons(IconRegister par1IconRegister)
     {
-        this.blockIcon = par1IconRegister.registerIcon("gases:gas_furnace_side");
-        this.furnaceIconFront = par1IconRegister.registerIcon(this.isActive ? "gases:gas_furnace_front_on" : "gases:gas_furnace_front_off");
-        this.furnaceIconTop = par1IconRegister.registerIcon("gases:gas_furnace_top");
+        this.blockIcon = par1IconRegister.registerIcon("gasesFramework:gas_furnace_side");
+        this.furnaceIconFront = par1IconRegister.registerIcon(this.isActive ? "gasesFramework:gas_furnace_front_on" : "gasesFramework:gas_furnace_front_off");
+        this.furnaceIconTop = par1IconRegister.registerIcon("gasesFramework:gas_furnace_top");
     }
 
     /**
@@ -343,7 +343,11 @@ public class BlockGasFurnace extends BlockContainer implements IGasReceptor
 	public boolean receiveGas(World world, int x, int y, int z, int side, GasType gasType)
 	{
 		TileEntityGasFurnace gasFurnace = (TileEntityGasFurnace)world.getBlockTileEntity(x, y, z);
-		if(gasFurnace.furnaceBurnTime < 100 * gasType.combustibility.burnRate)
+		if(gasType.combustibility.burnRate == 0)
+		{
+			return true;
+		}
+		else if(gasFurnace.furnaceBurnTime < 100 * gasType.combustibility.burnRate)
 		{
 			gasFurnace.furnaceBurnTime += 100 * gasType.combustibility.burnRate;
 			return true;

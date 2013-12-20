@@ -26,7 +26,6 @@ public class TileEntityPump extends TileEntity
 	private int pumpTime;
 	private int failedPumpings;
 	public boolean excludes;
-	public boolean enabled;
 	public GasType containedType;
 	public GasType filterType;
 	
@@ -34,7 +33,6 @@ public class TileEntityPump extends TileEntity
 	{
 		pumpTime = 25;
 		excludes = false;
-		enabled = true;
 	}
 	
 	public void readFromNBT(NBTTagCompound par1NBTTagCompound)
@@ -43,7 +41,6 @@ public class TileEntityPump extends TileEntity
 		pumpTime = par1NBTTagCompound.getInteger("pumpTime");
 		failedPumpings = par1NBTTagCompound.getInteger("failedPumpings");
 		excludes = par1NBTTagCompound.getBoolean("excludes");
-		enabled = par1NBTTagCompound.getBoolean("enabled");
 		int i = par1NBTTagCompound.getInteger("containedType");
 		if(i == -1)
 		{
@@ -71,7 +68,6 @@ public class TileEntityPump extends TileEntity
 		par1NBTTagCompound.setInteger("pumpTime", pumpTime);
 		par1NBTTagCompound.setInteger("failedPumpings", failedPumpings);
 		par1NBTTagCompound.setBoolean("excludes", excludes);
-		par1NBTTagCompound.setBoolean("enabled", enabled);
 		par1NBTTagCompound.setInteger("containedType", containedType != null ? containedType.gasIndex : -1);
 		par1NBTTagCompound.setInteger("filterType", filterType != null ? filterType.gasIndex : -1);
 	}
@@ -162,9 +158,9 @@ public class TileEntityPump extends TileEntity
     {
 		if(pumpTime-- <= 0)
 		{
-			if(enabled)
+			if(!worldObj.isBlockIndirectlyGettingPowered(xCoord, yCoord, zCoord))
 			{
-				BlockPump block = (BlockPump)Block.blocksList[worldObj.getBlockId(xCoord, yCoord, zCoord)];
+				BlockGasPump block = (BlockGasPump)Block.blocksList[worldObj.getBlockId(xCoord, yCoord, zCoord)];
 				int metadata = worldObj.getBlockMetadata(xCoord, yCoord, zCoord);
 				boolean canPumpAir = extractFromSides();
 				
@@ -201,7 +197,7 @@ public class TileEntityPump extends TileEntity
 						containedType = null;
 						failedPumpings = 0;
 					}
-					else// if(!canPumpAir)
+					else
 					{
 						failedPumpings++;
 					}

@@ -14,7 +14,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 
-public class BlockGasCollector extends BlockPump
+public class BlockGasCollector extends BlockGasPump
 {
 	private static final int[] reindex = new int[]{
 		1, 0, 5, 4, 3, 2

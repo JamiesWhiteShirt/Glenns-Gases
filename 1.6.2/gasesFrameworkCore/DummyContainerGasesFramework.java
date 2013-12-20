@@ -1,6 +1,6 @@
-package glenn.gases.core;
+package glenn.gasesframework.core;
 
-import glenn.gases.Gases;
+import glenn.gasesframework.GasesFramework;
 
 import java.util.Arrays;
 
@@ -15,19 +15,20 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
-public class DummyContainerGases extends DummyModContainer
+public class DummyContainerGasesFramework extends DummyModContainer
 {
-	public DummyContainerGases()
+	public DummyContainerGasesFramework()
 	{
 		super(new ModMetadata());
 		ModMetadata meta = getMetadata();
-		meta.modId = "gasesCore";
-		meta.name = "Glenn's Gases Core";
-		meta.version = Gases.version;
-		meta.description = "Adds gases to your Minecraft world!";
+		meta.modId = "gasesFrameworkCore";
+		meta.name = "Gases Framework Core";
+		meta.version = GasesFramework.version;
+		meta.description = "Adds core functionality for mods based on the Gases Framework.";
 		meta.authorList = Arrays.asList("Glenn");
 		meta.url = "http://www.minecraftforum.net/topic/1890587-/";
 		meta.screenshots = new String[0];
+		meta.parent = "gasesFramework";
 	}
 
 	@Override

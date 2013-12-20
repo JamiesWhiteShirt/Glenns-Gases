@@ -15,6 +15,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 import cpw.mods.fml.common.FMLLog;
@@ -71,40 +72,48 @@ public class EDClassTransformer implements IClassTransformer
 		}
 		else if(className.equals(c.get("ItemRenderer")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(ItemRenderer)...");
 			newData = patchClassItemRenderer(data, true);
 		}
 		else if(className.equals("net.minecraft.client.renderer.ItemRenderer"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(ItemRenderer)...");
 			newData = patchClassItemRenderer(data, false);
 		}
 		else if(className.equals(c.get("Entity")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(Entity)...");
 			newData = patchClassEntity(data, true);
 		}
 		else if(className.equals("net.minecraft.entity.Entity"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(Entity)...");
 			newData = patchClassEntity(data, false);
 		}
 		else if(className.equals(c.get("EntityLivingBase")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityLivingBase)...");
 			newData = patchClassEntityLivingBase(data, true);
 		}
 		else if(className.equals("net.minecraft.entity.EntityLivingBase"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityLivingBase)...");
 			newData = patchClassEntityLivingBase(data, false);
 		}
 		else if(className.equals(c.get("EntityRenderer")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityRenderer)...");
 			newData = patchClassEntityRenderer(data, true);
 		}
 		else if(className.equals("net.minecraft.client.renderer.EntityRenderer"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityRenderer)...");
 			newData = patchClassEntityRenderer(data, false);
 		}
 
 		if(newData != data)
 		{
-			System.out.println("[GasesFrameworkCore]Patched class: " + className);
+			System.out.println("[GasesFrameworkCore]Patch OK!");
 		}
 		
 		return newData;
@@ -660,28 +669,10 @@ public class EDClassTransformer implements IClassTransformer
 		ClassReader classReader = new ClassReader(data);
 		classReader.accept(classNode, 0);
 
-		classNode.fields.add(new FieldNode(26, "gasOverlay", "L" + classResourceLocation + ";", null, null));
-
 		for(int i = 0; i < classNode.methods.size(); i++)
 		{
 			MethodNode method = (MethodNode)classNode.methods.get(i);
-			if(method.name.equals("<clinit>"))
-			{
-				InsnList newInstructions = new InsnList();
-
-				newInstructions.add(new TypeInsnNode(NEW, classResourceLocation));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new LdcInsnNode("gases:textures/misc/gasoverlay.png"));
-				newInstructions.add(new MethodInsnNode(INVOKESPECIAL, classResourceLocation, "<init>", "(Ljava/lang/String;)V"));
-				newInstructions.add(new FieldInsnNode(PUTSTATIC, classItemRenderer, "gasOverlay", "L" + classResourceLocation + ";"));
-
-				for(int j = 0; j < method.instructions.size(); j++)
-				{
-					newInstructions.add(method.instructions.get(j));
-				}
-				method.instructions = newInstructions;
-			}
-			else if(method.name.equals(methodRenderOverlays) & method.desc.equals("(F)V"))
+			if(method.name.equals(methodRenderOverlays) & method.desc.equals("(F)V"))
 			{
 				InsnList newInstructions = new InsnList();
 				LabelNode theLabelNode = null;
@@ -737,20 +728,15 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitCode();
 			Label l0 = new Label();
 			renderGasOverlay.visitLabel(l0);
-			renderGasOverlay.visitLineNumber(655, l0);
-			renderGasOverlay.visitVarInsn(ALOAD, 0);
+			/*renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classMinecraft, methodGetTextureManager, "()L" + classTextureManager+ ";");
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classItemRenderer, "gasOverlay", "L" + classResourceLocation + ";");
-			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");
-			Label l1 = new Label();
-			renderGasOverlay.visitLabel(l1);
-			renderGasOverlay.visitLineNumber(656, l1);
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");*/
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classTessellator, fieldInstance, "L" + classTessellator + ";");
 			renderGasOverlay.visitVarInsn(ASTORE, 2);
 			Label l2 = new Label();
 			renderGasOverlay.visitLabel(l2);
-			renderGasOverlay.visitLineNumber(657, l2);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -759,7 +745,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 3);
 			Label l3 = new Label();
 			renderGasOverlay.visitLabel(l3);
-			renderGasOverlay.visitLineNumber(659, l3);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -768,7 +753,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 4);
 			Label l4 = new Label();
 			renderGasOverlay.visitLabel(l4);
-			renderGasOverlay.visitLineNumber(660, l4);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -783,7 +767,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 5);
 			Label l5 = new Label();
 			renderGasOverlay.visitLabel(l5);
-			renderGasOverlay.visitLineNumber(661, l5);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -792,7 +775,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 6);
 			Label l6 = new Label();
 			renderGasOverlay.visitLabel(l6);
-			renderGasOverlay.visitLineNumber(662, l6);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldTheWorld, "L" + classWorldClient + ";");
@@ -803,16 +785,12 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 7);
 			Label l7 = new Label();
 			renderGasOverlay.visitLabel(l7);
-			renderGasOverlay.visitLineNumber(663, l7);
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";");
 			renderGasOverlay.visitVarInsn(ILOAD, 7);
 			renderGasOverlay.visitInsn(AALOAD);
 			renderGasOverlay.visitTypeInsn(INSTANCEOF, "glenn/gasesframework/BlockGas");
 			Label l8 = new Label();
 			renderGasOverlay.visitJumpInsn(IFNE, l8);
-			Label l9 = new Label();
-			renderGasOverlay.visitLabel(l9);
-			renderGasOverlay.visitLineNumber(665, l9);
 			renderGasOverlay.visitInsn(RETURN);
 			renderGasOverlay.visitLabel(l8);
 			renderGasOverlay.visitLineNumber(667, l8);
@@ -821,11 +799,17 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(AALOAD);
 			renderGasOverlay.visitTypeInsn(CHECKCAST, "glenn/gasesframework/BlockGas");
 			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;");
+			renderGasOverlay.visitInsn(DUP);
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, "glenn/gasesframework/GasType", "getOverlayImage", "()L" + classResourceLocation + ";");
+			renderGasOverlay.visitVarInsn(ALOAD, 0);
+			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classMinecraft, methodGetTextureManager, "()L" + classTextureManager+ ";");
+			renderGasOverlay.visitInsn(SWAP);
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");
 			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gasesframework/GasType", "color", "I");
 			renderGasOverlay.visitVarInsn(ISTORE, 8);
 			Label l10 = new Label();
 			renderGasOverlay.visitLabel(l10);
-			renderGasOverlay.visitLineNumber(668, l10);
 			renderGasOverlay.visitVarInsn(FLOAD, 3);
 			renderGasOverlay.visitVarInsn(ILOAD, 8);
 			renderGasOverlay.visitIntInsn(BIPUSH, 16);
@@ -839,7 +823,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 9);
 			Label l11 = new Label();
 			renderGasOverlay.visitLabel(l11);
-			renderGasOverlay.visitLineNumber(669, l11);
 			renderGasOverlay.visitVarInsn(FLOAD, 3);
 			renderGasOverlay.visitVarInsn(ILOAD, 8);
 			renderGasOverlay.visitIntInsn(BIPUSH, 8);
@@ -853,7 +836,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 10);
 			Label l12 = new Label();
 			renderGasOverlay.visitLabel(l12);
-			renderGasOverlay.visitLineNumber(670, l12);
 			renderGasOverlay.visitVarInsn(FLOAD, 3);
 			renderGasOverlay.visitVarInsn(ILOAD, 8);
 			renderGasOverlay.visitIntInsn(SIPUSH, 255);
@@ -865,65 +847,43 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 11);
 			Label l13 = new Label();
 			renderGasOverlay.visitLabel(l13);
-			renderGasOverlay.visitLineNumber(672, l13);
 			renderGasOverlay.visitVarInsn(FLOAD, 9);
 			renderGasOverlay.visitVarInsn(FLOAD, 10);
 			renderGasOverlay.visitVarInsn(FLOAD, 11);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glColor4f", "(FFFF)V");
-			Label l14 = new Label();
-			renderGasOverlay.visitLabel(l14);
-			renderGasOverlay.visitLineNumber(674, l14);
 			renderGasOverlay.visitIntInsn(SIPUSH, 3042);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glEnable", "(I)V");
-			Label l15 = new Label();
-			renderGasOverlay.visitLabel(l15);
-			renderGasOverlay.visitLineNumber(675, l15);
 			renderGasOverlay.visitIntInsn(SIPUSH, 2929);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glDisable", "(I)V");
-			Label l16 = new Label();
-			renderGasOverlay.visitLabel(l16);
-			renderGasOverlay.visitLineNumber(676, l16);
 			renderGasOverlay.visitIntInsn(SIPUSH, 770);
 			renderGasOverlay.visitIntInsn(SIPUSH, 771);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glBlendFunc", "(II)V");
-			Label l17 = new Label();
-			renderGasOverlay.visitLabel(l17);
-			renderGasOverlay.visitLineNumber(677, l17);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glPushMatrix", "()V");
-			Label l18 = new Label();
-			renderGasOverlay.visitLabel(l18);
-			renderGasOverlay.visitLineNumber(678, l18);
 			renderGasOverlay.visitLdcInsn(4.0F);
 			renderGasOverlay.visitVarInsn(FSTORE, 12);
 			Label l19 = new Label();
 			renderGasOverlay.visitLabel(l19);
-			renderGasOverlay.visitLineNumber(679, l19);
 			renderGasOverlay.visitLdcInsn(-1.0F);
 			renderGasOverlay.visitVarInsn(FSTORE, 13);
 			Label l20 = new Label();
 			renderGasOverlay.visitLabel(l20);
-			renderGasOverlay.visitLineNumber(680, l20);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitVarInsn(FSTORE, 14);
 			Label l21 = new Label();
 			renderGasOverlay.visitLabel(l21);
-			renderGasOverlay.visitLineNumber(681, l21);
 			renderGasOverlay.visitLdcInsn(-1.0F);
 			renderGasOverlay.visitVarInsn(FSTORE, 15);
 			Label l22 = new Label();
 			renderGasOverlay.visitLabel(l22);
-			renderGasOverlay.visitLineNumber(682, l22);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitVarInsn(FSTORE, 16);
 			Label l23 = new Label();
 			renderGasOverlay.visitLabel(l23);
-			renderGasOverlay.visitLineNumber(683, l23);
 			renderGasOverlay.visitLdcInsn(-0.5F);
 			renderGasOverlay.visitVarInsn(FSTORE, 17);
 			Label l24 = new Label();
 			renderGasOverlay.visitLabel(l24);
-			renderGasOverlay.visitLineNumber(684, l24);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -934,7 +894,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 18);
 			Label l25 = new Label();
 			renderGasOverlay.visitLabel(l25);
-			renderGasOverlay.visitLineNumber(685, l25);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -944,12 +903,8 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 19);
 			Label l26 = new Label();
 			renderGasOverlay.visitLabel(l26);
-			renderGasOverlay.visitLineNumber(686, l26);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodStartDrawingQuads, "()V");
-			Label l27 = new Label();
-			renderGasOverlay.visitLabel(l27);
-			renderGasOverlay.visitLineNumber(687, l27);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 13);
 			renderGasOverlay.visitInsn(F2D);
@@ -966,9 +921,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l28 = new Label();
-			renderGasOverlay.visitLabel(l28);
-			renderGasOverlay.visitLineNumber(688, l28);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 14);
 			renderGasOverlay.visitInsn(F2D);
@@ -985,9 +937,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l29 = new Label();
-			renderGasOverlay.visitLabel(l29);
-			renderGasOverlay.visitLineNumber(689, l29);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 14);
 			renderGasOverlay.visitInsn(F2D);
@@ -1004,9 +953,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l30 = new Label();
-			renderGasOverlay.visitLabel(l30);
-			renderGasOverlay.visitLineNumber(690, l30);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 13);
 			renderGasOverlay.visitInsn(F2D);
@@ -1023,37 +969,19 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l31 = new Label();
-			renderGasOverlay.visitLabel(l31);
-			renderGasOverlay.visitLineNumber(691, l31);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodDraw, "()I");
 			renderGasOverlay.visitInsn(POP);
-			Label l32 = new Label();
-			renderGasOverlay.visitLabel(l32);
-			renderGasOverlay.visitLineNumber(692, l32);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glPopMatrix", "()V");
-			Label l33 = new Label();
-			renderGasOverlay.visitLabel(l33);
-			renderGasOverlay.visitLineNumber(693, l33);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glColor4f", "(FFFF)V");
-			Label l34 = new Label();
-			renderGasOverlay.visitLabel(l34);
-			renderGasOverlay.visitLineNumber(694, l34);
 			renderGasOverlay.visitIntInsn(SIPUSH, 3042);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glDisable", "(I)V");
-			Label l35 = new Label();
-			renderGasOverlay.visitLabel(l35);
-			renderGasOverlay.visitLineNumber(695, l35);
 			renderGasOverlay.visitIntInsn(SIPUSH, 2929);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glEnable", "(I)V");
-			Label l36 = new Label();
-			renderGasOverlay.visitLabel(l36);
-			renderGasOverlay.visitLineNumber(696, l36);
 			renderGasOverlay.visitInsn(RETURN);
 			Label l37 = new Label();
 			renderGasOverlay.visitLabel(l37);

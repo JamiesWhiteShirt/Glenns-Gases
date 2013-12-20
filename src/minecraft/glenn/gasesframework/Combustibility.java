@@ -18,11 +18,11 @@ public enum Combustibility
 	/**
 	 * Flammable in controlled environments and burns in gas form. Burn rate: 2
 	 */
-	FLAMMABLE(2, 8, 0.0F),
+	FLAMMABLE(2, 4, 0.0F),
 	/**
 	 * Flammable in controlled environments and burns quickly in gas form. Burn rate: 3
 	 */
-	HIGHLY_FLAMMABLE(3, 4, 0.0F),
+	HIGHLY_FLAMMABLE(3, 2, 0.0F),
 	/**
 	 * Flammable in controlled environments and explodes in gas form. Burn rate: 4
 	 */

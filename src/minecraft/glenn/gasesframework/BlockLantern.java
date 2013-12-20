@@ -29,6 +29,7 @@ public class BlockLantern extends Block
 	public BlockLantern(int blockID, Combustibility combustibility)
 	{
 		super(blockID, Material.iron);
+		
 		this.tickrate = combustibility != null ? combustibility.burnRate : 0;
 		this.combustibility = combustibility;
 

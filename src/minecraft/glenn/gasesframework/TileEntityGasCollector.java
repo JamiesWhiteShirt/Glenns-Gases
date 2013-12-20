@@ -23,7 +23,7 @@ public class TileEntityGasCollector extends TileEntityPump
     {
 		if(collectionTime-- <= 0)
 		{
-			if(enabled & !worldObj.isRemote & (containedType == null | containedType == GasesFramework.gasTypeAir))
+			if(!worldObj.isBlockIndirectlyGettingPowered(xCoord, yCoord, zCoord) & !worldObj.isRemote & (containedType == null | containedType == GasesFramework.gasTypeAir))
 			{
 				if(pendingGasAmount < 16)
 				{

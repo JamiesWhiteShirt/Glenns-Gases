@@ -68,7 +68,7 @@ public class ItemGasSampler extends Item
                 	ISample sample = (ISample)block;
                 	GasType newType = sample.sampleInteraction(world, i, j, k, GasType.gasTypes[itemStack.getItemDamage()], excludes);
                 	
-                	if(newType != null)
+                	if(!(newType == null || !newType.isIndustrial()))
                 	{
                 		itemStack.setItemDamage(newType.gasIndex);
                 	}
@@ -143,7 +143,7 @@ public class ItemGasSampler extends Item
     {
         for (int i = 0; i < GasType.gasTypes.length; i++)
         {
-        	if(GasType.gasTypes[i] != null)
+        	if(GasType.gasTypes[i] != null && GasType.gasTypes[i].isIndustrial())
         	{
         		par3List.add(new ItemStack(par1, 1, i));
         	}

@@ -7,7 +7,7 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.world.IBlockAccess;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
-import glenn.gasesframework.BlockPump;
+import glenn.gasesframework.BlockGasPump;
 import glenn.gasesframework.GasesFramework;
 
 public class RenderBlockPump implements ISimpleBlockRenderingHandler
@@ -89,7 +89,7 @@ public class RenderBlockPump implements ISimpleBlockRenderingHandler
 	@Override
 	public boolean renderWorldBlock(IBlockAccess blockAccess, int x, int y, int z, Block bblock, int modelId, RenderBlocks renderer)
 	{
-		BlockPump block = (BlockPump)bblock;
+		BlockGasPump block = (BlockGasPump)bblock;
 		
 		int direction = blockAccess.getBlockMetadata(x, y, z);
 		

@@ -11,7 +11,7 @@ import org.lwjgl.opengl.GL11;
 
 public class GuiGasFurnace extends GuiContainer
 {
-	private static final ResourceLocation furnaceGuiTextures = new ResourceLocation("gases:textures/gui/container/furnace_gas.png");
+	private static final ResourceLocation furnaceGuiTextures = new ResourceLocation("gasesframework:textures/gui/container/furnace_gas.png");
 	private TileEntityGasFurnace furnaceInventory;
 	
 	public GuiGasFurnace(InventoryPlayer par1InventoryPlayer, TileEntityGasFurnace par2TileEntityYourFurnace)

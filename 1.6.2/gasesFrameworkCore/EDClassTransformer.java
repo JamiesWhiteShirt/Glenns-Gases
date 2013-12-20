@@ -1,4 +1,4 @@
-package glenn.gases.core;
+package glenn.gasesframework.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,14 +15,17 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 
 import static org.objectweb.asm.Opcodes.*;
 
 public class EDClassTransformer implements IClassTransformer
 {
+	private FMLDeobfuscatingRemapper remapper;
 	private Map<String, String> c = new HashMap<String, String>();
 	
 	{
@@ -55,6 +58,7 @@ public class EDClassTransformer implements IClassTransformer
 		c.put("Tessellator", "bfn");
 		c.put("WorldClient", "bda");
 		c.put("GuiIngame", "avg");
+		c.put("IBlockAccess", "ace");
 	}
 	
 	@Override
@@ -62,117 +66,57 @@ public class EDClassTransformer implements IClassTransformer
 	{
 		byte[] newData = data;
 
-		if(className.equals("aqw"))
-		{
-			newData = patchClassBlock(data, true);
-		}
-		else if(className.equals("net.minecraft.block.Block"))
-		{
-			newData = patchClassBlock(data, false);
-		}
-		else if(className.equals("aof"))
-		{
-			newData = patchClassBlockFire(data, true);
-		}
-		else if(className.equals("net.minecraft.block.BlockFire"))
-		{
-			newData = patchClassBlockFire(data, false);
-		}
-		else if(className.equals("net.minecraftforge.client.GuiIngameForge"))
+		if(className.equals("net.minecraftforge.client.GuiIngameForge"))
 		{
 			//newData = patchClassGuiIngame(className, data);
 		}
-		else if(className.equals("bfg"))
+		else if(className.equals(c.get("ItemRenderer")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(ItemRenderer)...");
 			newData = patchClassItemRenderer(data, true);
 		}
 		else if(className.equals("net.minecraft.client.renderer.ItemRenderer"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(ItemRenderer)...");
 			newData = patchClassItemRenderer(data, false);
 		}
-		else if(className.equals("nm"))
+		else if(className.equals(c.get("Entity")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(Entity)...");
 			newData = patchClassEntity(data, true);
 		}
 		else if(className.equals("net.minecraft.entity.Entity"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(Entity)...");
 			newData = patchClassEntity(data, false);
 		}
-		else if(className.equals("oe"))
+		else if(className.equals(c.get("EntityLivingBase")))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityLivingBase)...");
 			newData = patchClassEntityLivingBase(data, true);
 		}
 		else if(className.equals("net.minecraft.entity.EntityLivingBase"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityLivingBase)...");
 			newData = patchClassEntityLivingBase(data, false);
 		}
-		else if(className.equals("aoz"))
+		else if(className.equals(c.get("EntityRenderer")))
 		{
-			newData = patchClassBlockFluid(data, true);
-		}
-		else if(className.equals("net.minecraft.block.BlockFluid"))
-		{
-			newData = patchClassBlockFluid(data, false);
-		}
-		else if(className.equals("apa"))
-		{
-			newData = patchClassBlockFlowing(data, true);
-		}
-		else if(className.equals("net.minecraft.block.BlockFlowing"))
-		{
-			newData = patchClassBlockFlowing(data, false);
-		}
-		else if(className.equals("bfb"))
-		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityRenderer)...");
 			newData = patchClassEntityRenderer(data, true);
 		}
 		else if(className.equals("net.minecraft.client.renderer.EntityRenderer"))
 		{
+			System.out.println("[GasesFrameworkCore]Patching class: " + className + "(EntityRenderer)...");
 			newData = patchClassEntityRenderer(data, false);
 		}
 
 		if(newData != data)
 		{
-			System.out.println("[GasesCore]Patched class: " + className);
+			System.out.println("[GasesFrameworkCore]Patch OK!");
 		}
 		
 		return newData;
-	}
-	
-	public byte[] dummyTransformFunc(byte[] data, boolean obfuscated)
-	{
-		ClassNode classNode = new ClassNode();
-		ClassReader classReader = new ClassReader(data);
-		classReader.accept(classNode, 0);
-		
-		for(int i = 0; i < classNode.methods.size(); i++)
-		{
-		    MethodNode method = classNode.methods.get(i);
-		    String methodName = method.name;
-		    if(method.name.equals(obfuscated ? "h" : "updateLightmap") && method.desc.equals("(F)V"))
-		    {
-		    	InsnList newInstructions = new InsnList();
-		    	for(int j = 0; j < method.instructions.size(); j++)
-		    	{
-		    		AbstractInsnNode instruction = method.instructions.get(j);
-		    		newInstructions.add(instruction);
-		    		if(instruction.getOpcode() == GETFIELD)
-					{
-		    			FieldInsnNode fieldInstruction = (FieldInsnNode)instruction;
-		    			if(fieldInstruction.name.equals(obfuscated ? "ak" : "gammaSetting") & fieldInstruction.owner.equals(obfuscated ? "aui" : "net/minecraft/client/settings/GameSettings"))
-		    			{
-		    				newInstructions.add(new InsnNode(POP));
-		    				newInstructions.add(new LdcInsnNode(-1.0F));
-		    			}
-					}
-		    	}
-		    	method.instructions = newInstructions;
-		    }
-		}
-		
-		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		classNode.accept(writer);
-		return writer.toByteArray();
 	}
 	
 	public byte[] patchClassEntityRenderer(byte[] data, boolean obfuscated)
@@ -254,374 +198,6 @@ public class EDClassTransformer implements IClassTransformer
 		return writer.toByteArray();
 	}
 	
-	public byte[] patchClassBlockFlowing(byte[] data, boolean obfuscated)
-	{
-		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
-		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
-		
-		String methodUpdateTick = obfuscated ? "a" : "updateTick";
-		String methodSetBlock = obfuscated ? "c" : "setBlock";
-		
-		String fieldStone = obfuscated ? "y" : "stone";
-		String fieldBlockID = obfuscated ? "cF" : "blockID";
-
-		String descriptor = "(L" + classWorld + ";IIILjava/util/Random;)V";
-		
-		ClassNode classNode = new ClassNode();
-		ClassReader classReader = new ClassReader(data);
-		classReader.accept(classNode, 0);
-		
-		for(int i = 0; i < classNode.methods.size(); i++)
-		{
-			MethodNode method = classNode.methods.get(i);
-			if(method.name.equals(methodUpdateTick) & method.desc.equals(descriptor))
-			{
-				InsnList newInstructions = new InsnList();
-				for(int j = 0; j < method.instructions.size(); j++)
-				{
-					AbstractInsnNode instruction = method.instructions.get(j);
-					newInstructions.add(instruction);
-					
-					if(instruction.getOpcode() == INVOKEVIRTUAL)
-					{
-						MethodInsnNode methodInsnNode = (MethodInsnNode)instruction;
-						if(methodInsnNode.name.equals(methodSetBlock))
-						{
-							AbstractInsnNode dependentInstruction = method.instructions.get(j - 2);
-							if(dependentInstruction.getOpcode() == GETSTATIC)
-							{
-								FieldInsnNode fieldInsnNode = (FieldInsnNode)dependentInstruction;
-								if(fieldInsnNode.name.equals(fieldStone))
-								{
-									newInstructions.add(new InsnNode(POP));
-									newInstructions.add(new VarInsnNode(ALOAD, 1));
-									newInstructions.add(new VarInsnNode(ILOAD, 2));
-									newInstructions.add(new VarInsnNode(ILOAD, 3));
-									newInstructions.add(new VarInsnNode(ILOAD, 4));
-									newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSteam", "Lglenn/gases/BlockGas;"));
-									newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockID, "I"));
-									newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
-								}
-							}
-						}
-					}
-				}
-				
-				method.instructions = newInstructions;
-			}
-		}
-		
-		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		classNode.accept(writer);
-		return writer.toByteArray();
-	}
-	
-	public byte[] patchClassBlockFluid(byte[] data, boolean obfuscated)
-	{
-		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
-		String classBlock = obfuscated ? c.get("Block") : "net/minecraft/block/Block";
-		
-		String methodCheckForHarden = obfuscated ? "k" : "checkForHarden";
-		String methodSetBlock = obfuscated ? "c" : "setBlock";
-		
-		String fieldCobblestone = obfuscated ? "B" : "cobblestone";
-		String fieldBlockID = obfuscated ? "cF" : "blockID";
-		
-		String descriptor = "(L" + classWorld + ";III)V";
-		
-		ClassNode classNode = new ClassNode();
-		ClassReader classReader = new ClassReader(data);
-		classReader.accept(classNode, 0);
-		
-		for(int i = 0; i < classNode.methods.size(); i++)
-		{
-			MethodNode method = classNode.methods.get(i);
-			if(method.name.equals(methodCheckForHarden) & method.desc.equals(descriptor))
-			{
-				InsnList newInstructions = new InsnList();
-				for(int j = 0; j < method.instructions.size(); j++)
-				{
-					AbstractInsnNode instruction = method.instructions.get(j);
-					newInstructions.add(instruction);
-					
-					if(instruction.getOpcode() == POP)
-					{
-						AbstractInsnNode dependentInstruction = method.instructions.get(j - 1);
-						if(dependentInstruction.getOpcode() == INVOKEVIRTUAL)
-						{
-							MethodInsnNode methodInsnNode = (MethodInsnNode)dependentInstruction;
-							if(methodInsnNode.name.equals(methodSetBlock) & methodInsnNode.desc.equals("(IIII)Z"))
-							{
-								newInstructions.add(new VarInsnNode(ALOAD, 1));
-								newInstructions.add(new VarInsnNode(ILOAD, 2));
-								newInstructions.add(new VarInsnNode(ILOAD, 3));
-								newInstructions.add(new InsnNode(ICONST_1));
-								newInstructions.add(new InsnNode(IADD));
-								newInstructions.add(new VarInsnNode(ILOAD, 4));
-								newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSteam", "Lglenn/gases/BlockGas;"));
-								newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockID, "I"));
-								newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
-								newInstructions.add(new InsnNode(POP));
-							}
-						}
-					}
-				}
-				
-				method.instructions = newInstructions;
-			}
-		}
-		
-		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		classNode.accept(writer);
-		return writer.toByteArray();
-	}
-
-	public byte[] patchClassItemGlassBottle(byte[] data, boolean obfuscated)
-	{
-		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
-		String classItemGlassBottle = obfuscated ? c.get("ItemGlassBottle") : "net/minecraft/item/ItemGlassBottle";
-		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
-		String classEntityPlayer = obfuscated ? c.get("EntityPlayer") : "net/minecraft/entity/player/EntityPlayer";
-		String classMovingObjectPosition = obfuscated ? c.get("MovingObjectPosition") : "net/minecraft/util/MovingObjectPosition";
-		String classItemStack = obfuscated ? c.get("ItemStack") : "net/minecraft/item/ItemStack";
-		String classItem = obfuscated ? c.get("Item") : "net/minecraft/item/Item";
-		String classInventoryPlayer = obfuscated ? c.get("InventoryPlayer") : "net/minecraft/entity/player/InventoryPlayer";
-		String classItemPotion = obfuscated ? c.get("ItemPotion") : "net/minecraft/item/ItemPotion";
-		String classEntityItem = obfuscated ? c.get("EntityItem") : "net/minecraft/entity/item/EntityItem";
-
-		String enumMovingObjectType = obfuscated ? c.get("EnumMovingObjectType") : "net/minecraft/util/EnumMovingObjectType";
-
-		String methodOnItemRightClick = obfuscated ? "a" : "onItemRightClick";
-		String methodGetMovingObjectPositionFromPlayer = obfuscated ? "a" : "getMovingObjectPositionFromPlayer";
-		String methodCanMineBlock = obfuscated ? "a" : "canMineBlock";
-		String methodCanPlayerEdit = obfuscated ? "a" : "canPlayerEdit";
-		String methodGetBlockMaterial = obfuscated ? "g" : "getBlockMaterial";
-		String methodAddItemStackToInventory = obfuscated ? "a" : "addItemStackToInventory";
-		String methodDropPlayerItem = obfuscated ? "b" : "dropPlayerItem";
-		String methodSetBlock = obfuscated ? "c" : "setBlock";
-
-		String fieldTypeOfHit = obfuscated ? "a" : "typeOfHit";
-		String fieldTILE = obfuscated ? "a" : "TILE";
-		String fieldBlockX = obfuscated ? "b" : "blockX";
-		String fieldBlockY = obfuscated ? "c" : "blockY";
-		String fieldBlockZ = obfuscated ? "d" : "blockZ";
-		String fieldSideHit = obfuscated ? "e" : "sideHit";
-		String fieldWater = obfuscated ? "h" : "water";
-		String fieldStackSize = obfuscated ? "b" : "stackSize";
-		String fieldPotion = obfuscated ? "bu" : "potion";
-		String fieldInventory = obfuscated ? "bn" : "inventory";
-		String fieldItemID = obfuscated ? "cv" : "itemID";
-		
-		String descriptor = "(L" + classItemStack + ";L" + classWorld + ";L" + classEntityPlayer + ";)L" + classItemStack + ";";
-
-		ClassNode classNode = new ClassNode();
-		ClassReader classReader = new ClassReader(data);
-		classReader.accept(classNode, 0);
-
-		for(int i = 0; i < classNode.methods.size(); i++)
-		{
-			MethodNode method = (MethodNode)classNode.methods.get(i);
-			if(method.name.equals(methodOnItemRightClick) & method.desc.equals(descriptor))
-			{
-				InsnList newInstructions = new InsnList();
-
-				LabelNode l0 = new LabelNode();
-				newInstructions.add(l0);
-				newInstructions.add(new VarInsnNode(ALOAD, 0));
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new InsnNode(ICONST_1));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classItemGlassBottle, methodGetMovingObjectPositionFromPlayer, "(L" + classWorld + ";L" + classEntityPlayer + ";Z)L" + classMovingObjectPosition + ";"));
-				newInstructions.add(new VarInsnNode(ASTORE, 4));
-				LabelNode l1 = new LabelNode();
-				newInstructions.add(l1);
-				newInstructions.add(new VarInsnNode(ALOAD, 4));
-				LabelNode l2 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IFNONNULL, l2));
-				LabelNode l3 = new LabelNode();
-				newInstructions.add(l3);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new InsnNode(ARETURN));
-				newInstructions.add(l2);
-				newInstructions.add(new VarInsnNode(ALOAD, 4));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classMovingObjectPosition, fieldTypeOfHit, "L" + enumMovingObjectType + ";"));
-				newInstructions.add(new FieldInsnNode(GETSTATIC, enumMovingObjectType, fieldTILE, "L" + enumMovingObjectType + ";"));
-				LabelNode l4 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IF_ACMPNE, l4));
-				LabelNode l5 = new LabelNode();
-				newInstructions.add(l5);
-				newInstructions.add(new VarInsnNode(ALOAD, 4));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classMovingObjectPosition, fieldBlockX, "I"));
-				newInstructions.add(new VarInsnNode(ISTORE, 5));
-				LabelNode l6 = new LabelNode();
-				newInstructions.add(l6);
-				newInstructions.add(new VarInsnNode(ALOAD, 4));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classMovingObjectPosition, fieldBlockY, "I"));
-				newInstructions.add(new VarInsnNode(ISTORE, 6));
-				LabelNode l7 = new LabelNode();
-				newInstructions.add(l7);
-				newInstructions.add(new VarInsnNode(ALOAD, 4));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classMovingObjectPosition, fieldBlockZ, "I"));
-				newInstructions.add(new VarInsnNode(ISTORE, 7));
-				LabelNode l8 = new LabelNode();
-				newInstructions.add(l8);
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodCanMineBlock, "(L" + classEntityPlayer + ";III)Z"));
-				LabelNode l9 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IFNE, l9));
-				LabelNode l10 = new LabelNode();
-				newInstructions.add(l10);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new InsnNode(ARETURN));
-				newInstructions.add(l9);
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new VarInsnNode(ALOAD, 4));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classMovingObjectPosition, fieldSideHit, "I"));
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityPlayer, methodCanPlayerEdit, "(IIIIL" + classItemStack + ";)Z"));
-				LabelNode l11 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IFNE, l11));
-				LabelNode l12 = new LabelNode();
-				newInstructions.add(l12);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new InsnNode(ARETURN));
-				newInstructions.add(l11);
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMaterial, "(III)L" + classMaterial + ";"));
-				newInstructions.add(new FieldInsnNode(GETSTATIC, classMaterial, fieldWater, "L" + classMaterial + ";"));
-				LabelNode l13 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IF_ACMPNE, l13));
-				LabelNode l14 = new LabelNode();
-				newInstructions.add(l14);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classItemStack, fieldStackSize, "I"));
-				newInstructions.add(new InsnNode(ICONST_1));
-				newInstructions.add(new InsnNode(ISUB));
-				newInstructions.add(new FieldInsnNode(PUTFIELD, classItemStack, fieldStackSize, "I"));
-				LabelNode l15 = new LabelNode();
-				newInstructions.add(l15);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classItemStack, fieldStackSize, "I"));
-				LabelNode l16 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IFGT, l16));
-				LabelNode l17 = new LabelNode();
-				newInstructions.add(l17);
-				newInstructions.add(new TypeInsnNode(NEW, classItemStack));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new FieldInsnNode(GETSTATIC, classItem, fieldPotion, "L" + classItemPotion + ";"));
-				newInstructions.add(new MethodInsnNode(INVOKESPECIAL, classItemStack, "<init>", "(L" + classItem + ";)V"));
-				newInstructions.add(new InsnNode(ARETURN));
-				newInstructions.add(l16);
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classEntityPlayer, fieldInventory, "L" + classInventoryPlayer + ";"));
-				newInstructions.add(new TypeInsnNode(NEW, classItemStack));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new FieldInsnNode(GETSTATIC, classItem, fieldPotion, "L" + classItemPotion + ";"));
-				newInstructions.add(new MethodInsnNode(INVOKESPECIAL, classItemStack, "<init>", "(L" + classItem + ";)V"));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classInventoryPlayer, methodAddItemStackToInventory, "(L" + classItemStack + ";)Z"));
-				newInstructions.add(new JumpInsnNode(IFNE, l13));
-				LabelNode l18 = new LabelNode();
-				newInstructions.add(l18);
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new TypeInsnNode(NEW, classItemStack));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new FieldInsnNode(GETSTATIC, classItem, fieldPotion, "L" + classItemPotion + ";"));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classItemPotion, fieldItemID, "I"));
-				newInstructions.add(new InsnNode(ICONST_1));
-				newInstructions.add(new InsnNode(ICONST_0));
-				newInstructions.add(new MethodInsnNode(INVOKESPECIAL, classItemStack, "<init>", "(III)V"));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityPlayer, methodDropPlayerItem, "(L" + classItemStack + ";)L" + classEntityItem + ";"));
-				newInstructions.add(new InsnNode(POP));
-				newInstructions.add(l13);
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMaterial, "(III)L" + classMaterial + ";"));
-				newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
-				newInstructions.add(new JumpInsnNode(IF_ACMPNE, l4));
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
-				newInstructions.add(new InsnNode(ACONST_NULL));
-				newInstructions.add(new JumpInsnNode(IF_ACMPEQ, l4));
-				LabelNode l19 = new LabelNode();
-				newInstructions.add(l19);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classItemStack, fieldStackSize, "I"));
-				newInstructions.add(new InsnNode(ICONST_1));
-				newInstructions.add(new InsnNode(ISUB));
-				newInstructions.add(new FieldInsnNode(PUTFIELD, classItemStack, fieldStackSize, "I"));
-				LabelNode l20 = new LabelNode();
-				newInstructions.add(l20);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classItemStack, fieldStackSize, "I"));
-				LabelNode l21 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IFGT, l21));
-				LabelNode l22 = new LabelNode();
-				newInstructions.add(l22);
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
-				newInstructions.add(new InsnNode(ARETURN));
-				newInstructions.add(l21);
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new FieldInsnNode(GETFIELD, classEntityPlayer, fieldInventory, "L" + classInventoryPlayer + ";"));
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classInventoryPlayer, methodAddItemStackToInventory, "(L" + classItemStack + ";)Z"));
-				LabelNode l23 = new LabelNode();
-				newInstructions.add(new JumpInsnNode(IFNE, l23));
-				LabelNode l24 = new LabelNode();
-				newInstructions.add(l24);
-				newInstructions.add(new VarInsnNode(ALOAD, 3));
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new MethodInsnNode(INVOKESTATIC, "glenn/gases/UtilMethods", "getBottledItem", "(L" + classWorld + ";III)L" + classItemStack + ";"));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityPlayer, methodDropPlayerItem, "(L" + classItemStack + ";)L" + classEntityItem + ";"));
-				newInstructions.add(new InsnNode(POP));
-				newInstructions.add(l23);
-				newInstructions.add(new VarInsnNode(ALOAD, 2));
-				newInstructions.add(new VarInsnNode(ILOAD, 5));
-				newInstructions.add(new VarInsnNode(ILOAD, 6));
-				newInstructions.add(new VarInsnNode(ILOAD, 7));
-				newInstructions.add(new InsnNode(ICONST_0));
-				newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodSetBlock, "(IIII)Z"));
-				newInstructions.add(new InsnNode(POP));
-				newInstructions.add(l4);
-				newInstructions.add(new VarInsnNode(ALOAD, 1));
-				newInstructions.add(new InsnNode(ARETURN));
-
-				method.instructions = newInstructions;
-			}
-		}
-
-		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		classNode.accept(writer);
-		return writer.toByteArray();
-	}
-
 	public byte[] patchClassEntityLivingBase(byte[] data, boolean obfuscated)
 	{
 		String classEntityLivingBase = obfuscated ? c.get("EntityLivingBase") : "net/minecraft/entity/EntityLivingBase";
@@ -673,7 +249,7 @@ public class EDClassTransformer implements IClassTransformer
 						if(invokeInstruction.name.equals(methodIsInsideOfMaterial) & invokeInstruction.desc.equals(descriptor))
 						{
 							newInstructions.add(new VarInsnNode(ALOAD, 0));
-							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
+							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gasesframework/GasesFramework", "gasMaterial", "L" + classMaterial + ";"));
 							newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityLivingBase, methodIsInsideOfMaterial, "(L" + classMaterial + ";)Z"));
 							newInstructions.add(new InsnNode(IOR));
 						}
@@ -722,7 +298,7 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l0 = new LabelNode();
 			method.instructions.add(l0);
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
-			method.instructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
+			method.instructions.add(new FieldInsnNode(GETSTATIC, "glenn/gasesframework/GasesFramework", "gasMaterial", "L" + classMaterial + ";"));
 			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityLivingBase, methodIsInsideOfMaterial, "(L" + classMaterial + ";)Z"));
 			method.instructions.add(new VarInsnNode(ISTORE, 1));
 			LabelNode l1 = new LabelNode();
@@ -770,22 +346,22 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new VarInsnNode(ILOAD, 7));
 			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockId, "(III)I"));
 			method.instructions.add(new InsnNode(AALOAD));
-			method.instructions.add(new TypeInsnNode(CHECKCAST, "glenn/gases/BlockGas"));
+			method.instructions.add(new TypeInsnNode(CHECKCAST, "glenn/gasesframework/BlockGas"));
 			method.instructions.add(new VarInsnNode(ASTORE, 2));
 			method.instructions.add(l3);
 			method.instructions.add(new VarInsnNode(ILOAD, 1));
 			LabelNode l9 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l9));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "blindnessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/GasType", "blindnessRate", "I"));
 			method.instructions.add(new JumpInsnNode(IFLT, l9));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "blindnessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/GasType", "blindnessRate", "I"));
 			method.instructions.add(new InsnNode(IADD));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "blindnessTimer", "I"));
 			LabelNode l12 = new LabelNode();
@@ -802,15 +378,15 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l13 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l13));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "suffocationRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/GasType", "suffocationRate", "I"));
 			method.instructions.add(new JumpInsnNode(IFLT, l13));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "suffocationRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/GasType", "suffocationRate", "I"));
 			method.instructions.add(new InsnNode(IADD));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "suffocationTimer", "I"));
 			LabelNode l16 = new LabelNode();
@@ -827,15 +403,15 @@ public class EDClassTransformer implements IClassTransformer
 			LabelNode l17 = new LabelNode();
 			method.instructions.add(new JumpInsnNode(IFEQ, l17));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "slownessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/GasType", "slownessRate", "I"));
 			method.instructions.add(new JumpInsnNode(IFLT, l17));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
 			method.instructions.add(new InsnNode(DUP));
 			method.instructions.add(new FieldInsnNode(GETFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/GasType", "slownessRate", "I"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/GasType", "slownessRate", "I"));
 			method.instructions.add(new InsnNode(IADD));
 			method.instructions.add(new FieldInsnNode(PUTFIELD, classEntityLivingBase, "slownessTimer", "I"));
 			LabelNode l20 = new LabelNode();
@@ -893,9 +469,9 @@ public class EDClassTransformer implements IClassTransformer
 			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityLivingBase, methodAttackEntityFrom, "(L" + classDamageSource + ";F)Z"));
 			method.instructions.add(new InsnNode(POP));*/
 			method.instructions.add(new VarInsnNode(ALOAD, 2));
-			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;"));
+			method.instructions.add(new FieldInsnNode(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;"));
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
-			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gases/GasType", "onBreathed", "(L" + classEntityLivingBase + ";)V"));
+			method.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/GasType", "onBreathed", "(L" + classEntityLivingBase + ";)V"));
 			
 			method.instructions.add(l29);
 			method.instructions.add(new VarInsnNode(ALOAD, 0));
@@ -922,7 +498,7 @@ public class EDClassTransformer implements IClassTransformer
 			
 			method.localVariables.add(new LocalVariableNode("this", "L" + classEntityLivingBase + ";", null, l0, l37, 0));
 			method.localVariables.add(new LocalVariableNode("isInsideOfGas", "Z", null, l1, l37, 1));
-			method.localVariables.add(new LocalVariableNode("block", "Lglenn/gases/BlockGas;", null, l2, l37, 2));
+			method.localVariables.add(new LocalVariableNode("block", "Lglenn/gasesframework/BlockGas;", null, l2, l37, 2));
 			method.localVariables.add(new LocalVariableNode("d0", "D", null, l5, l3, 3));
 			method.localVariables.add(new LocalVariableNode("i", "I", null, l6, l3, 5));
 			method.localVariables.add(new LocalVariableNode("j", "I", null, l7, l3, 6));
@@ -945,6 +521,8 @@ public class EDClassTransformer implements IClassTransformer
 		String classEntity = obfuscated ? c.get("Entity") : "net/minecraft/entity/Entity";
 		String classMaterial = obfuscated ? c.get("Material") : "net/minecraft/block/material/Material";
 		String classWorld = obfuscated ? c.get("World") : "net/minecraft/world/World";
+		
+		String interfaceBlockAccess = obfuscated ? c.get("IBlockAccess") : "net/minecraft/world/IBlockAccess";
 
 		String methodIsInsideOfMaterial = obfuscated ? "a" : "isInsideOfMaterial";
 		String methodGetBlockMetadata = obfuscated ? "h" : "getBlockMetadata";
@@ -976,13 +554,13 @@ public class EDClassTransformer implements IClassTransformer
 						LabelNode l6 = new LabelNode();
 						newInstructions.add(new JumpInsnNode(IFEQ, l6));
 						newInstructions.add(new VarInsnNode(ALOAD, 1));
-						newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
+						newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gasesframework/GasesFramework", "gasMaterial", "L" + classMaterial + ";"));
 						newInstructions.add(new JumpInsnNode(IF_ACMPNE, l6));
 						newInstructions.add(new FieldInsnNode(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 7));
 						newInstructions.add(new InsnNode(AALOAD));
 						newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockMaterial, "L" + classMaterial + ";"));
-						newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
+						newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gasesframework/GasesFramework", "gasMaterial", "L" + classMaterial + ";"));
 						newInstructions.add(new JumpInsnNode(IF_ACMPNE, l6));
 						newInstructions.add(new VarInsnNode(DLOAD, 2));
 						newInstructions.add(new VarInsnNode(ILOAD, 5));
@@ -991,14 +569,20 @@ public class EDClassTransformer implements IClassTransformer
 						newInstructions.add(new FieldInsnNode(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 7));
 						newInstructions.add(new InsnNode(AALOAD));
-						newInstructions.add(new TypeInsnNode(CHECKCAST, "glenn/gases/BlockGas"));
+						newInstructions.add(new TypeInsnNode(CHECKCAST, "glenn/gasesframework/BlockGas"));
+						newInstructions.add(new VarInsnNode(ALOAD, 0));
+						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
+						newInstructions.add(new TypeInsnNode(CHECKCAST, interfaceBlockAccess));
+						newInstructions.add(new VarInsnNode(ILOAD, 4));
+						newInstructions.add(new VarInsnNode(ILOAD, 5));
+						newInstructions.add(new VarInsnNode(ILOAD, 6));
 						newInstructions.add(new VarInsnNode(ALOAD, 0));
 						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 4));
 						newInstructions.add(new VarInsnNode(ILOAD, 5));
 						newInstructions.add(new VarInsnNode(ILOAD, 6));
 						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMetadata, "(III)I"));
-						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gases/BlockGas", "getMinY", "(I)D"));
+						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/BlockGas", "getMinY", "(L" + interfaceBlockAccess + ";IIII)D"));
 						newInstructions.add(new InsnNode(DCMPL));
 						LabelNode l8 = new LabelNode();
 						newInstructions.add(new JumpInsnNode(IFLE, l8));
@@ -1009,14 +593,20 @@ public class EDClassTransformer implements IClassTransformer
 						newInstructions.add(new FieldInsnNode(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 7));
 						newInstructions.add(new InsnNode(AALOAD));
-						newInstructions.add(new TypeInsnNode(CHECKCAST, "glenn/gases/BlockGas"));
+						newInstructions.add(new TypeInsnNode(CHECKCAST, "glenn/gasesframework/BlockGas"));
+						newInstructions.add(new VarInsnNode(ALOAD, 0));
+						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
+						newInstructions.add(new TypeInsnNode(CHECKCAST, interfaceBlockAccess));
+						newInstructions.add(new VarInsnNode(ILOAD, 4));
+						newInstructions.add(new VarInsnNode(ILOAD, 5));
+						newInstructions.add(new VarInsnNode(ILOAD, 6));
 						newInstructions.add(new VarInsnNode(ALOAD, 0));
 						newInstructions.add(new FieldInsnNode(GETFIELD, classEntity, fieldWorldObj, "L" + classWorld + ";"));
 						newInstructions.add(new VarInsnNode(ILOAD, 4));
 						newInstructions.add(new VarInsnNode(ILOAD, 5));
 						newInstructions.add(new VarInsnNode(ILOAD, 6));
 						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classWorld, methodGetBlockMetadata, "(III)I"));
-						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gases/BlockGas", "getMaxY", "(I)D"));
+						newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, "glenn/gasesframework/BlockGas", "getMaxY", "(L" + interfaceBlockAccess + ";IIII)D"));
 						newInstructions.add(new InsnNode(DCMPG));
 						newInstructions.add(new JumpInsnNode(IFGE, l8));
 						newInstructions.add(new InsnNode(ICONST_1));
@@ -1079,28 +669,10 @@ public class EDClassTransformer implements IClassTransformer
 		ClassReader classReader = new ClassReader(data);
 		classReader.accept(classNode, 0);
 
-		classNode.fields.add(new FieldNode(26, "gasOverlay", "L" + classResourceLocation + ";", null, null));
-
 		for(int i = 0; i < classNode.methods.size(); i++)
 		{
 			MethodNode method = (MethodNode)classNode.methods.get(i);
-			if(method.name.equals("<clinit>"))
-			{
-				InsnList newInstructions = new InsnList();
-
-				newInstructions.add(new TypeInsnNode(NEW, classResourceLocation));
-				newInstructions.add(new InsnNode(DUP));
-				newInstructions.add(new LdcInsnNode("gases:textures/misc/gasoverlay.png"));
-				newInstructions.add(new MethodInsnNode(INVOKESPECIAL, classResourceLocation, "<init>", "(Ljava/lang/String;)V"));
-				newInstructions.add(new FieldInsnNode(PUTSTATIC, classItemRenderer, "gasOverlay", "L" + classResourceLocation + ";"));
-
-				for(int j = 0; j < method.instructions.size(); j++)
-				{
-					newInstructions.add(method.instructions.get(j));
-				}
-				method.instructions = newInstructions;
-			}
-			else if(method.name.equals(methodRenderOverlays) & method.desc.equals("(F)V"))
+			if(method.name.equals(methodRenderOverlays) & method.desc.equals("(F)V"))
 			{
 				InsnList newInstructions = new InsnList();
 				LabelNode theLabelNode = null;
@@ -1135,7 +707,7 @@ public class EDClassTransformer implements IClassTransformer
 							newInstructions.add(new VarInsnNode(ALOAD, 0));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";"));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";"));
-							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
+							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gasesframework/GasesFramework", "gasMaterial", "L" + classMaterial + ";"));
 							newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityClientPlayerMP, methodIsInsideOfMaterial, "(L" + classMaterial + ";)Z"));
 							newInstructions.add(new JumpInsnNode(IFEQ, labelNode1));
 							newInstructions.add(new VarInsnNode(ALOAD, 0));
@@ -1156,20 +728,15 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitCode();
 			Label l0 = new Label();
 			renderGasOverlay.visitLabel(l0);
-			renderGasOverlay.visitLineNumber(655, l0);
-			renderGasOverlay.visitVarInsn(ALOAD, 0);
+			/*renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classMinecraft, methodGetTextureManager, "()L" + classTextureManager+ ";");
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classItemRenderer, "gasOverlay", "L" + classResourceLocation + ";");
-			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");
-			Label l1 = new Label();
-			renderGasOverlay.visitLabel(l1);
-			renderGasOverlay.visitLineNumber(656, l1);
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");*/
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classTessellator, fieldInstance, "L" + classTessellator + ";");
 			renderGasOverlay.visitVarInsn(ASTORE, 2);
 			Label l2 = new Label();
 			renderGasOverlay.visitLabel(l2);
-			renderGasOverlay.visitLineNumber(657, l2);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -1178,7 +745,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 3);
 			Label l3 = new Label();
 			renderGasOverlay.visitLabel(l3);
-			renderGasOverlay.visitLineNumber(659, l3);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -1187,7 +753,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 4);
 			Label l4 = new Label();
 			renderGasOverlay.visitLabel(l4);
-			renderGasOverlay.visitLineNumber(660, l4);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -1202,7 +767,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 5);
 			Label l5 = new Label();
 			renderGasOverlay.visitLabel(l5);
-			renderGasOverlay.visitLineNumber(661, l5);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -1211,7 +775,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 6);
 			Label l6 = new Label();
 			renderGasOverlay.visitLabel(l6);
-			renderGasOverlay.visitLineNumber(662, l6);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldTheWorld, "L" + classWorldClient + ";");
@@ -1222,29 +785,31 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(ISTORE, 7);
 			Label l7 = new Label();
 			renderGasOverlay.visitLabel(l7);
-			renderGasOverlay.visitLineNumber(663, l7);
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";");
 			renderGasOverlay.visitVarInsn(ILOAD, 7);
 			renderGasOverlay.visitInsn(AALOAD);
-			renderGasOverlay.visitTypeInsn(INSTANCEOF, "glenn/gases/BlockGas");
+			renderGasOverlay.visitTypeInsn(INSTANCEOF, "glenn/gasesframework/BlockGas");
 			Label l8 = new Label();
 			renderGasOverlay.visitJumpInsn(IFNE, l8);
-			Label l9 = new Label();
-			renderGasOverlay.visitLabel(l9);
-			renderGasOverlay.visitLineNumber(665, l9);
 			renderGasOverlay.visitInsn(RETURN);
 			renderGasOverlay.visitLabel(l8);
 			renderGasOverlay.visitLineNumber(667, l8);
 			renderGasOverlay.visitFieldInsn(GETSTATIC, classBlock, fieldBlocksList, "[L" + classBlock + ";");
 			renderGasOverlay.visitVarInsn(ILOAD, 7);
 			renderGasOverlay.visitInsn(AALOAD);
-			renderGasOverlay.visitTypeInsn(CHECKCAST, "glenn/gases/BlockGas");
-			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gases/BlockGas", "type", "Lglenn/gases/GasType;");
-			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gases/GasType", "color", "I");
+			renderGasOverlay.visitTypeInsn(CHECKCAST, "glenn/gasesframework/BlockGas");
+			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gasesframework/BlockGas", "type", "Lglenn/gasesframework/GasType;");
+			renderGasOverlay.visitInsn(DUP);
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, "glenn/gasesframework/GasType", "getOverlayImage", "()L" + classResourceLocation + ";");
+			renderGasOverlay.visitVarInsn(ALOAD, 0);
+			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classMinecraft, methodGetTextureManager, "()L" + classTextureManager+ ";");
+			renderGasOverlay.visitInsn(SWAP);
+			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTextureManager, methodBindTexture, "(L" + classResourceLocation + ";)V");
+			renderGasOverlay.visitFieldInsn(GETFIELD, "glenn/gasesframework/GasType", "color", "I");
 			renderGasOverlay.visitVarInsn(ISTORE, 8);
 			Label l10 = new Label();
 			renderGasOverlay.visitLabel(l10);
-			renderGasOverlay.visitLineNumber(668, l10);
 			renderGasOverlay.visitVarInsn(FLOAD, 3);
 			renderGasOverlay.visitVarInsn(ILOAD, 8);
 			renderGasOverlay.visitIntInsn(BIPUSH, 16);
@@ -1258,7 +823,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 9);
 			Label l11 = new Label();
 			renderGasOverlay.visitLabel(l11);
-			renderGasOverlay.visitLineNumber(669, l11);
 			renderGasOverlay.visitVarInsn(FLOAD, 3);
 			renderGasOverlay.visitVarInsn(ILOAD, 8);
 			renderGasOverlay.visitIntInsn(BIPUSH, 8);
@@ -1272,7 +836,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 10);
 			Label l12 = new Label();
 			renderGasOverlay.visitLabel(l12);
-			renderGasOverlay.visitLineNumber(670, l12);
 			renderGasOverlay.visitVarInsn(FLOAD, 3);
 			renderGasOverlay.visitVarInsn(ILOAD, 8);
 			renderGasOverlay.visitIntInsn(SIPUSH, 255);
@@ -1284,65 +847,43 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 11);
 			Label l13 = new Label();
 			renderGasOverlay.visitLabel(l13);
-			renderGasOverlay.visitLineNumber(672, l13);
 			renderGasOverlay.visitVarInsn(FLOAD, 9);
 			renderGasOverlay.visitVarInsn(FLOAD, 10);
 			renderGasOverlay.visitVarInsn(FLOAD, 11);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glColor4f", "(FFFF)V");
-			Label l14 = new Label();
-			renderGasOverlay.visitLabel(l14);
-			renderGasOverlay.visitLineNumber(674, l14);
 			renderGasOverlay.visitIntInsn(SIPUSH, 3042);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glEnable", "(I)V");
-			Label l15 = new Label();
-			renderGasOverlay.visitLabel(l15);
-			renderGasOverlay.visitLineNumber(675, l15);
 			renderGasOverlay.visitIntInsn(SIPUSH, 2929);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glDisable", "(I)V");
-			Label l16 = new Label();
-			renderGasOverlay.visitLabel(l16);
-			renderGasOverlay.visitLineNumber(676, l16);
 			renderGasOverlay.visitIntInsn(SIPUSH, 770);
 			renderGasOverlay.visitIntInsn(SIPUSH, 771);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glBlendFunc", "(II)V");
-			Label l17 = new Label();
-			renderGasOverlay.visitLabel(l17);
-			renderGasOverlay.visitLineNumber(677, l17);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glPushMatrix", "()V");
-			Label l18 = new Label();
-			renderGasOverlay.visitLabel(l18);
-			renderGasOverlay.visitLineNumber(678, l18);
 			renderGasOverlay.visitLdcInsn(4.0F);
 			renderGasOverlay.visitVarInsn(FSTORE, 12);
 			Label l19 = new Label();
 			renderGasOverlay.visitLabel(l19);
-			renderGasOverlay.visitLineNumber(679, l19);
 			renderGasOverlay.visitLdcInsn(-1.0F);
 			renderGasOverlay.visitVarInsn(FSTORE, 13);
 			Label l20 = new Label();
 			renderGasOverlay.visitLabel(l20);
-			renderGasOverlay.visitLineNumber(680, l20);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitVarInsn(FSTORE, 14);
 			Label l21 = new Label();
 			renderGasOverlay.visitLabel(l21);
-			renderGasOverlay.visitLineNumber(681, l21);
 			renderGasOverlay.visitLdcInsn(-1.0F);
 			renderGasOverlay.visitVarInsn(FSTORE, 15);
 			Label l22 = new Label();
 			renderGasOverlay.visitLabel(l22);
-			renderGasOverlay.visitLineNumber(682, l22);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitVarInsn(FSTORE, 16);
 			Label l23 = new Label();
 			renderGasOverlay.visitLabel(l23);
-			renderGasOverlay.visitLineNumber(683, l23);
 			renderGasOverlay.visitLdcInsn(-0.5F);
 			renderGasOverlay.visitVarInsn(FSTORE, 17);
 			Label l24 = new Label();
 			renderGasOverlay.visitLabel(l24);
-			renderGasOverlay.visitLineNumber(684, l24);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -1353,7 +894,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 18);
 			Label l25 = new Label();
 			renderGasOverlay.visitLabel(l25);
-			renderGasOverlay.visitLineNumber(685, l25);
 			renderGasOverlay.visitVarInsn(ALOAD, 0);
 			renderGasOverlay.visitFieldInsn(GETFIELD, classItemRenderer, fieldMc, "L" + classMinecraft + ";");
 			renderGasOverlay.visitFieldInsn(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";");
@@ -1363,12 +903,8 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitVarInsn(FSTORE, 19);
 			Label l26 = new Label();
 			renderGasOverlay.visitLabel(l26);
-			renderGasOverlay.visitLineNumber(686, l26);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodStartDrawingQuads, "()V");
-			Label l27 = new Label();
-			renderGasOverlay.visitLabel(l27);
-			renderGasOverlay.visitLineNumber(687, l27);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 13);
 			renderGasOverlay.visitInsn(F2D);
@@ -1385,9 +921,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l28 = new Label();
-			renderGasOverlay.visitLabel(l28);
-			renderGasOverlay.visitLineNumber(688, l28);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 14);
 			renderGasOverlay.visitInsn(F2D);
@@ -1404,9 +937,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l29 = new Label();
-			renderGasOverlay.visitLabel(l29);
-			renderGasOverlay.visitLineNumber(689, l29);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 14);
 			renderGasOverlay.visitInsn(F2D);
@@ -1423,9 +953,6 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l30 = new Label();
-			renderGasOverlay.visitLabel(l30);
-			renderGasOverlay.visitLineNumber(690, l30);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitVarInsn(FLOAD, 13);
 			renderGasOverlay.visitInsn(F2D);
@@ -1442,37 +969,19 @@ public class EDClassTransformer implements IClassTransformer
 			renderGasOverlay.visitInsn(FADD);
 			renderGasOverlay.visitInsn(F2D);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodAddVertexWithUV, "(DDDDD)V");
-			Label l31 = new Label();
-			renderGasOverlay.visitLabel(l31);
-			renderGasOverlay.visitLineNumber(691, l31);
 			renderGasOverlay.visitVarInsn(ALOAD, 2);
 			renderGasOverlay.visitMethodInsn(INVOKEVIRTUAL, classTessellator, methodDraw, "()I");
 			renderGasOverlay.visitInsn(POP);
-			Label l32 = new Label();
-			renderGasOverlay.visitLabel(l32);
-			renderGasOverlay.visitLineNumber(692, l32);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glPopMatrix", "()V");
-			Label l33 = new Label();
-			renderGasOverlay.visitLabel(l33);
-			renderGasOverlay.visitLineNumber(693, l33);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitInsn(FCONST_1);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glColor4f", "(FFFF)V");
-			Label l34 = new Label();
-			renderGasOverlay.visitLabel(l34);
-			renderGasOverlay.visitLineNumber(694, l34);
 			renderGasOverlay.visitIntInsn(SIPUSH, 3042);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glDisable", "(I)V");
-			Label l35 = new Label();
-			renderGasOverlay.visitLabel(l35);
-			renderGasOverlay.visitLineNumber(695, l35);
 			renderGasOverlay.visitIntInsn(SIPUSH, 2929);
 			renderGasOverlay.visitMethodInsn(INVOKESTATIC, "org/lwjgl/opengl/GL11", "glEnable", "(I)V");
-			Label l36 = new Label();
-			renderGasOverlay.visitLabel(l36);
-			renderGasOverlay.visitLineNumber(696, l36);
 			renderGasOverlay.visitInsn(RETURN);
 			Label l37 = new Label();
 			renderGasOverlay.visitLabel(l37);
@@ -1563,117 +1072,13 @@ public class EDClassTransformer implements IClassTransformer
 							newInstructions.add(new VarInsnNode(ALOAD, 0));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classGuiIngame, fieldMc, "L" + classMinecraft + ";"));
 							newInstructions.add(new FieldInsnNode(GETFIELD, classMinecraft, fieldThePlayer, "L" + classEntityClientPlayerMP + ";"));
-							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasMaterial", "L" + classMaterial + ";"));
+							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gasesframework/GasesFramework", "gasMaterial", "L" + classMaterial + ";"));
 							newInstructions.add(new MethodInsnNode(INVOKEVIRTUAL, classEntityClientPlayerMP, methodIsInsideOfMaterial, "(L" + classMaterial + ";)Z"));
 							newInstructions.add(new InsnNode(IOR));
 						}
 					}
 				}
 				method.instructions = newInstructions;
-			}
-		}
-
-		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		classNode.accept(writer);
-		return writer.toByteArray();
-	}
-
-	public byte[] patchClassBlockFire(byte[] data, boolean obfuscated)
-	{
-		String classBlock = obfuscated ? "aqw" : "net/minecraft/block/Block";
-		String classWorld = obfuscated ? "abv" : "net/minecraft/world/World";
-
-		String methodTryToCatchBlockOnFire = "tryToCatchBlockOnFire";
-		String methodSetBlockToAir = obfuscated ? "i" : "setBlockToAir";
-		String methodSetBlock = obfuscated ? "f" : "setBlock";
-
-		String fieldBlockID = obfuscated ? "cF" : "blockID";
-		
-		String descriptor = "(L" + classWorld + ";IIIILjava/util/Random;I)V";
-		String descriptor2 = "(L" + classWorld + ";IIIILjava/util/Random;ILnet/minecraftforge/common/ForgeDirection;)V";
-		
-		ClassNode classNode = new ClassNode();
-		ClassReader classReader = new ClassReader(data);
-		classReader.accept(classNode, 0);
-
-		for(int i = 0; i < classNode.methods.size(); i++)
-		{
-			MethodNode method = (MethodNode)classNode.methods.get(i);
-			if(method.name.equals(methodTryToCatchBlockOnFire) & method.desc.equals(descriptor2))
-			{
-				InsnList newInstructions = new InsnList();
-				for(int j = 0; j < method.instructions.size(); j++)
-				{
-					AbstractInsnNode instruction = method.instructions.get(j);
-					if(instruction.getOpcode() == INVOKEVIRTUAL)
-					{
-						MethodInsnNode invokeInstruction = (MethodInsnNode)instruction;
-						if(invokeInstruction.name.equals(methodSetBlockToAir))
-						{
-							invokeInstruction.name = methodSetBlock;
-							invokeInstruction.desc = "(IIIIII)Z";
-
-							newInstructions.add(new FieldInsnNode(GETSTATIC, "glenn/gases/Gases", "gasSmoke", "Lglenn/gases/BlockGas;"));
-							newInstructions.add(new FieldInsnNode(GETFIELD, classBlock, fieldBlockID, "I"));
-							newInstructions.add(new IntInsnNode(BIPUSH, 7));
-							newInstructions.add(new InsnNode(ICONST_3));
-						}
-					}
-					newInstructions.add(instruction);
-				}
-				method.instructions = newInstructions;
-			}
-		}
-
-		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-		classNode.accept(writer);
-		return writer.toByteArray();
-	}
-
-	public byte[] patchClassBlock(byte[] data, boolean obfuscated)
-	{
-		String fieldBedrock = obfuscated ? "E" : "bedrock";
-
-		ClassNode classNode = new ClassNode();
-		ClassReader classReader = new ClassReader(data);
-		classReader.accept(classNode, 0);
-
-		Iterator<MethodNode> methods = classNode.methods.iterator();
-
-		while(methods.hasNext())
-		{
-			MethodNode method = methods.next();
-			if(method.name.equals("<clinit>"))
-			{
-				Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
-				int instructionIndex = 0;
-				while(instructions.hasNext())
-				{
-					instructionIndex++;
-					AbstractInsnNode instruction = instructions.next();
-					if(instruction.getOpcode() == PUTSTATIC)
-					{
-						FieldInsnNode fieldInstruction = (FieldInsnNode)instruction;
-						if(fieldInstruction.name.equals(fieldBedrock))
-						{
-							for(int i = instructionIndex - 1; i > 0; i--)
-							{
-								AbstractInsnNode newInstruction = method.instructions.get(i);
-								if(newInstruction.getOpcode() == NEW)
-								{
-									TypeInsnNode newTypeInstruction = (TypeInsnNode)newInstruction;
-									newTypeInstruction.desc = "glenn/gases/BlockBedrock";
-									break;
-								}
-								else if(newInstruction.getOpcode() == INVOKESPECIAL)
-								{
-									MethodInsnNode methodInstruction = (MethodInsnNode)newInstruction;
-									methodInstruction.owner = "glenn/gases/BlockBedrock";
-								}
-							}
-						}
-					}
-				}
 			}
 		}
 

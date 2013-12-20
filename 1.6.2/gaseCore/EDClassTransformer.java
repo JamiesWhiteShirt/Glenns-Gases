@@ -28,35 +28,35 @@ public class EDClassTransformer implements IClassTransformer
 	private Map<String, String> c = new HashMap<String, String>();
 	
 	{
-		c.put("Block", "aqz");
-		c.put("BlockFire", "aoi");
-		c.put("ItemRenderer", "bfj");
-		c.put("Entity", "nn");
-		c.put("EntityLivingBase", "of");
-		c.put("ItemGlassBottle", "wo");
-		c.put("BlockFluid", "apc");
-		c.put("BlockFlowing", "apd");
-		c.put("EntityRenderer", "bfe");
-		c.put("WorldProvider", "aei");
-		c.put("World", "abw");
-		c.put("Material", "akc");
-		c.put("EntityPlayer", "uf");
-		c.put("MovingObjectPosition", "ata");
-		c.put("ItemStack", "ye");
-		c.put("Item", "yc");
-		c.put("InventoryPlayer", "ud");
-		c.put("ItemPotion", "yp");
-		c.put("EntityItem", "ss");
-		c.put("EnumMovingObjectType", "atb");
-		c.put("MathHelper", "ls");
-		c.put("DamageSource", "nb");
-		c.put("Minecraft", "atv");
-		c.put("ResourceLocation", "bjo");
-		c.put("EntityClientPlayerMP", "bdi");
-		c.put("TextureManager", "bim");
-		c.put("Tessellator", "bfq");
-		c.put("WorldClient", "bdd");
-		c.put("GuiIngame", "avj");
+		c.put("Block", "aqw");
+		c.put("BlockFire", "aof");
+		c.put("ItemRenderer", "bfg");
+		c.put("Entity", "nm");
+		c.put("EntityLivingBase", "oe");
+		c.put("ItemGlassBottle", "wn");
+		c.put("BlockFluid", "aoz");
+		c.put("BlockFlowing", "apa");
+		c.put("EntityRenderer", "bfb");
+		c.put("WorldProvider", "aeh");
+		c.put("World", "abv");
+		c.put("Material", "ajz");
+		c.put("EntityPlayer", "ue");
+		c.put("MovingObjectPosition", "asx");
+		c.put("ItemStack", "yd");
+		c.put("Item", "yb");
+		c.put("InventoryPlayer", "uc");
+		c.put("ItemPotion", "yo");
+		c.put("EntityItem", "sr");
+		c.put("EnumMovingObjectType", "asy");
+		c.put("MathHelper", "lr");
+		c.put("DamageSource", "na");
+		c.put("Minecraft", "ats");
+		c.put("ResourceLocation", "bjl");
+		c.put("EntityClientPlayerMP", "bdf");
+		c.put("TextureManager", "bij");
+		c.put("Tessellator", "bfn");
+		c.put("WorldClient", "bda");
+		c.put("GuiIngame", "avg");
 	}
 	
 	@Override

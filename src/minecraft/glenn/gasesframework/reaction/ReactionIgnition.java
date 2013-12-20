@@ -22,14 +22,14 @@ public class ReactionIgnition extends Reaction
 		
 		if(GasesFramework.isIgnitionBlock(block2ID))
 		{
-			if(Block.blocksList[block1ID] instanceof BlockGas)
+			if(Block.blocksList[block1ID] instanceof BlockGas && Block.blocksList[block1ID] != GasesFramework.gasFire)
 			{
 				return ((BlockGas)Block.blocksList[block1ID]).type.combustibility.fireSpreadRate;
 			}
 		}
 		else if(GasesFramework.isIgnitionBlock(block1ID))
 		{
-			if(Block.blocksList[block2ID] instanceof BlockGas)
+			if(Block.blocksList[block2ID] instanceof BlockGas && Block.blocksList[block1ID] != GasesFramework.gasFire)
 			{
 				return ((BlockGas)Block.blocksList[block2ID]).type.combustibility.fireSpreadRate;
 			}
@@ -66,15 +66,16 @@ public class ReactionIgnition extends Reaction
 		
 		if(GasesFramework.isIgnitionBlock(block2ID))
 		{
-			if(Block.blocksList[block1ID] instanceof BlockGas)
+			if(Block.blocksList[block1ID] instanceof BlockGas && Block.blocksList[block1ID] != GasesFramework.gasFire)
 			{
+				int metadata = world.getBlockMetadata(block1X, block1Y, block1Z);
 				((BlockGas)Block.blocksList[block1ID]).onFire(world, block1X, block1Y, block1Z, random);
 				return true;
 			}
 		}
 		else if(GasesFramework.isIgnitionBlock(block1ID))
 		{
-			if(Block.blocksList[block2ID] instanceof BlockGas)
+			if(Block.blocksList[block2ID] instanceof BlockGas && Block.blocksList[block1ID] != GasesFramework.gasFire)
 			{
 				((BlockGas)Block.blocksList[block2ID]).onFire(world, block2X, block2Y, block2Z, random);
 				return true;

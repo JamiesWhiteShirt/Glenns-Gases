@@ -48,8 +48,13 @@ public class BlockGasPipe extends Block implements IGasReceptor
 	{
 		super(blockID, Material.iron);
 		
+		if(!GasesFramework.MECHANICAL_ITEMS_ENCOURAGED())
+		{
+			throw new RuntimeException("A gas pipe block was created while mechanical items were not encouraged. Please put GasesFramework.ENCOURAGE_MECHANICAL_ITEMS() in the mod's static initalizer.");
+		}
+		
 		this.setHardness(1.0F);
-		this.setTextureName("gases:pipe");
+		this.setTextureName("gasesframework:pipe");
 	}
 	
 	public boolean[] getRenderConnectionArray(IBlockAccess blockAccess, int x, int y, int z)

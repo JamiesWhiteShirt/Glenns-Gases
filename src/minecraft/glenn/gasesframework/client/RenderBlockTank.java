@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.world.IBlockAccess;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
 import glenn.gasesframework.BlockGasTank;
-import glenn.gasesframework.BlockPump;
+import glenn.gasesframework.BlockGasPump;
 import glenn.gasesframework.GasesFramework;
 
 public class RenderBlockTank implements ISimpleBlockRenderingHandler

@@ -44,7 +44,7 @@ public class BlockGasTank extends Block implements IGasSource, IGasReceptor, ITi
 	{
 		TileEntityTank tileEntity = (TileEntityTank)world.getBlockTileEntity(x, y, z);
 		
-		return tileEntity.containedType;
+		return tileEntity.containedType != null ? tileEntity.containedType : GasesFramework.gasTypeAir;
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class BlockGasTank extends Block implements IGasSource, IGasReceptor, ITi
 		GasType gasType = tileEntity.containedType;
 		tileEntity.decrement();
 		
-		return gasType;
+		return gasType != null ? gasType : GasesFramework.gasTypeAir;
 	}
 	
 	@Override

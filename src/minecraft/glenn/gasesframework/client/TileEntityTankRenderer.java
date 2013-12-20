@@ -11,7 +11,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class TileEntityTankRenderer extends TileEntitySpecialRenderer
 {
-	private ResourceLocation texture = new ResourceLocation("gases:textures/misc/gas_tanked.png");
+	private ResourceLocation texture = new ResourceLocation("gasesframework:textures/misc/gas_tanked.png");
 	private Tessellator tessellator;
 	
 	@Override

@@ -20,6 +20,8 @@ import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ReportedException;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
@@ -48,13 +50,15 @@ import cpw.mods.fml.common.registry.LanguageRegistry;
  * Gases Framework provides support for simplified implementation of gases in Minecraft.
  * <br>
  * <br>
- * This piece of software can be distributed freely without permission from the author.
+ * This piece of software can be distributed freely without permission from the author. The software must be unaltered.
+ * This software will sometimes be updated, so it is recommended to keep an eye on the official download/source.
+ * Backwards compatibility will maintained in most cases, but it is recommended to check for changes at least on a monthly basis.
  * <br>
- * Copyright © 2013 Erlend Åmdal
+ * Copyright 2013 Erlend Amdal
  * @author Glenn
  *
  */
-@Mod(modid = "gasesFramework", name = "Gases Framework", version = GasesFramework.version)
+@Mod(modid = "gasesFramework", name = "Gases Framework", version = GasesFramework.version, dependencies="required-after:gasesFrameworkCore")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class GasesFramework
 {
@@ -67,7 +71,7 @@ public class GasesFramework
 	public static CommonProxy proxy;
 	public static final GuiHandler guiHandler = new GuiHandler();
 	
-	public static final String version = "1.0.0";
+	public static final String version = "1.0.1";
 	public static float gasExplosionFactor;
 	public static int gasFurnaceHeatingSpeed;
 	
@@ -82,10 +86,30 @@ public class GasesFramework
 	public static int renderBlockPumpID;
 	public static int renderBlockTankID;
 	
+	public static ResourceLocation gasOverlayImage = new ResourceLocation("gasesframework:textures/misc/gas_overlay.png");
+	public static ResourceLocation fireOverlayImage = new ResourceLocation("gasesframework:textures/misc/fire_overlay.png");
+	
+	private static boolean ENCOURAGE_MECHANICAL_ITEMS_VAR = false;
+	private static boolean ENCOURAGE_LANTERNS_VAR = false;
+	
 	/**
 	 * Standard gas material used by gas blocks.
 	 */
-	public static final Material gasMaterial = (new Material(MapColor.airColor)).setReplaceable();
+	public static final Material gasMaterial = (new Material(MapColor.airColor)
+	{
+		public boolean isSolid()
+	    {
+	        return false;
+	    }
+		
+		/**
+	     * Returns if this material is considered solid or not
+	     */
+	    public boolean blocksMovement()
+	    {
+	        return false;
+	    }
+	}).setReplaceable();
 	
 	private static boolean gasReactives[] = new boolean[Block.blocksList.length];
 	private static ArrayList<Reaction> reactions = new ArrayList<Reaction>();
@@ -97,11 +121,19 @@ public class GasesFramework
 	/**
 	 * Included by default with Gases Framework.
 	 */
+	public static BlockGas gasFire;
+	/**
+	 * Included by default with Gases Framework.
+	 */
 	public static BlockGasPipe gasPipeSmoke;
 	/**
 	 * Included by default with Gases Framework.
 	 */
 	public static GasType gasTypeSmoke;
+	/**
+	 * Included by default with Gases Framework.
+	 */
+	public static GasType gasTypeFire;
 	
 	/**
 	 * The item used for glass bottles containing gas. These bottles are registered automatically for each gas type created, unless it is specified as non-industrial.
@@ -149,32 +181,41 @@ public class GasesFramework
 	
 	private void initBlocksAndItems()
 	{
-		GameRegistry.registerItem(gasBottle = (new ItemGasBottle(b("gasBottleID", 400))).setUnlocalizedName("gasBottle").setCreativeTab(creativeTab).setTextureName("gases:gas_bottle"), "gasBottle");
-		GameRegistry.registerItem(gasSamplerIncluder = (new ItemGasSampler(b("gasSamplerIncluderID", 402), false)).setUnlocalizedName("gasSamplerIncluder").setCreativeTab(creativeTab).setTextureName("gases:sampler"), "gasSamplerIncluder");
-		GameRegistry.registerItem(gasSamplerExcluder = (new ItemGasSampler(b("gasSamplerExcluderID", 403), true)).setUnlocalizedName("gasSamplerExcluder").setCreativeTab(creativeTab).setTextureName("gases:sampler"), "gasSamplerExcluder");
+		GameRegistry.registerItem(gasBottle = (new ItemGasBottle(b("gasBottleID", 400))).setUnlocalizedName("gasBottle").setCreativeTab(creativeTab).setTextureName("gasesframework:gas_bottle"), "gasBottle");
 
-		GameRegistry.registerBlock(gasSmoke = (BlockGas)(new BlockGas(a("gasSmokeID", 500))).setHardness(0.0F).setUnlocalizedName("gasSmoke").setCreativeTab(creativeTab).setTextureName("gases:gas"), "gasSmoke");
+		GameRegistry.registerBlock(gasSmoke = (BlockGas)(new BlockGas(a("gasSmokeID", 500))).setUnlocalizedName("gasSmoke").setCreativeTab(creativeTab), "gasSmoke");
+		GameRegistry.registerBlock(gasFire = (BlockGas)(new BlockGasFire(a("gasFireID", 500))).setLightValue(0.5F).setUnlocalizedName("gasFire").setCreativeTab(creativeTab).setTextureName("gasesframework:gas_fire"), "gasFire");
 		
-		GameRegistry.registerBlock(gasPipeAir = (BlockGasPipe)new BlockGasPipe(a("gasPipeAirID", 525)).setCreativeTab(creativeTab).setUnlocalizedName("gasPipeEmpty"), "gasPipeAir");
-		GameRegistry.registerBlock(gasPipeSmoke = (BlockGasPipe)new BlockGasPipe(a("gasPipeSmokeID", 526)).setUnlocalizedName("gasPipeSmoke"), "gasPipeSmoke");
-	
-		GameRegistry.registerBlock(gasPump = new BlockPump(a("gasPumpID", 540)).setCreativeTab(creativeTab).setUnlocalizedName("gasPump").setTextureName("gases:pump"), "gasPump");
-		GameRegistry.registerBlock(gasTank = new BlockGasTank(a("gasTankID", 541)).setCreativeTab(creativeTab).setUnlocalizedName("gasTank").setTextureName("gases:tank"), "gasTank");
-		GameRegistry.registerBlock(gasCollector = new BlockGasCollector(a("gasCollectorID", 542)).setCreativeTab(creativeTab).setUnlocalizedName("gasCollector").setTextureName("gases:collector"), "gasCollector");
-		GameRegistry.registerBlock(gasFurnaceIdle = (new BlockGasFurnace(a("gasFurnaceIdleID", 543), false)).setHardness(3.5F).setStepSound(Block.soundStoneFootstep).setUnlocalizedName("gasFurnace").setCreativeTab(creativeTab), "gasFurnaceIdle");
-		GameRegistry.registerBlock(gasFurnaceActive = (new BlockGasFurnace(a("gasFurnaceActiveID", 544), true)).setHardness(3.5F).setStepSound(Block.soundStoneFootstep).setLightValue(0.25F).setUnlocalizedName("gasFurnace"), "gasFurnaceActive");
+		if(MECHANICAL_ITEMS_ENCOURAGED())
+		{
+			GameRegistry.registerItem(gasSamplerIncluder = (new ItemGasSampler(b("gasSamplerIncluderID", 401), false)).setUnlocalizedName("gasSamplerIncluder").setCreativeTab(creativeTab).setTextureName("gasesframework:sampler"), "gasSamplerIncluder");
+			GameRegistry.registerItem(gasSamplerExcluder = (new ItemGasSampler(b("gasSamplerExcluderID", 402), true)).setUnlocalizedName("gasSamplerExcluder").setCreativeTab(creativeTab).setTextureName("gasesframework:sampler"), "gasSamplerExcluder");
+			
+			GameRegistry.registerBlock(gasPipeAir = (BlockGasPipe)new BlockGasPipe(a("gasPipeAirID", 525)).setCreativeTab(creativeTab).setUnlocalizedName("gasPipeEmpty"), "gasPipeAir");
+			GameRegistry.registerBlock(gasPipeSmoke = (BlockGasPipe)new BlockGasPipe(a("gasPipeSmokeID", 526)).setUnlocalizedName("gasPipeSmoke"), "gasPipeSmoke");
+			GameRegistry.registerBlock(gasPump = new BlockGasPump(a("gasPumpID", 540)).setHardness(2.5F).setCreativeTab(creativeTab).setUnlocalizedName("gasPump").setTextureName("gasesframework:pump"), "gasPump");
+			GameRegistry.registerBlock(gasTank = new BlockGasTank(a("gasTankID", 541)).setHardness(3.5F).setCreativeTab(creativeTab).setUnlocalizedName("gasTank").setTextureName("gasesframework:tank"), "gasTank");
+			GameRegistry.registerBlock(gasCollector = new BlockGasCollector(a("gasCollectorID", 542)).setHardness(2.5F).setCreativeTab(creativeTab).setUnlocalizedName("gasCollector").setTextureName("gasesframework:collector"), "gasCollector");
+			GameRegistry.registerBlock(gasFurnaceIdle = (new BlockGasFurnace(a("gasFurnaceIdleID", 543), false)).setHardness(3.5F).setStepSound(Block.soundStoneFootstep).setUnlocalizedName("gasFurnace").setCreativeTab(creativeTab), "gasFurnaceIdle");
+			GameRegistry.registerBlock(gasFurnaceActive = (new BlockGasFurnace(a("gasFurnaceActiveID", 544), true)).setHardness(3.5F).setStepSound(Block.soundStoneFootstep).setLightValue(0.25F).setUnlocalizedName("gasFurnace"), "gasFurnaceActive");
+		}
 
 		gasTypeAir = new GasTypeAir();
 		gasTypeSmoke = new GasType(gasSmoke, gasPipeSmoke, 1, "Smoke", 0x3F3F3F, 2, -16, Combustibility.NONE).setEffectRates(4, 4, 0);
+		gasTypeFire = new GasTypeFire(gasFire, 11).setEvaporationRate(2);
 		
 		lanternEmptyID = a("lanternEmptyID", 550);
-		GameRegistry.registerBlock(lanternEmpty = (BlockLantern)(new BlockLanternEmpty(lanternEmptyID)).setHardness(0.0F).setUnlocalizedName("lanternEmpty").setCreativeTab(creativeTab).setTextureName("gases:lantern_empty"), "lanternEmpty");
-		GameRegistry.registerBlock(lanternGasEmpty = (BlockLantern)(new BlockLanternSpecial(a("lanternGasEmptyID", 552), 0, new ItemStack(Item.glassBottle), new ItemStack(Item.glassBottle), null)).setUnlocalizedName("lanternGasEmpty").setTextureName("gases:lantern_gas0_off"), "lanternGasEmpty");
-		GameRegistry.registerBlock(lanternGas1 = (BlockLantern)(new BlockLantern(a("lanternGas1ID", 553), Combustibility.CONTROLLABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas1").setTextureName("gases:lantern_gas0_on"), "lanternGas1");
-		GameRegistry.registerBlock(lanternGas2 = (BlockLantern)(new BlockLantern(a("lanternGas2ID", 555), Combustibility.FLAMMABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas2").setTextureName("gases:lantern_gas0_on"), "lanternGas2");
-		GameRegistry.registerBlock(lanternGas3 = (BlockLantern)(new BlockLantern(a("lanternGas3ID", 557), Combustibility.HIGHLY_FLAMMABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas3").setTextureName("gases:lantern_gas0_on"), "lanternGas3");
-		GameRegistry.registerBlock(lanternGas4 = (BlockLantern)(new BlockLantern(a("lanternGas4ID", 558), Combustibility.EXPLOSIVE)).setLightValue(1.0F).setUnlocalizedName("lanternGas4").setTextureName("gases:lantern_gas0_on"), "lanternGas4");
-		GameRegistry.registerBlock(lanternGas5 = (BlockLantern)(new BlockLantern(a("lanternGas5ID", 559), Combustibility.HIGHLY_EXPLOSIVE)).setLightValue(1.0F).setUnlocalizedName("lanternGas5").setTextureName("gases:lantern_gas0_on"), "lanternGas5");
+		GameRegistry.registerBlock(lanternEmpty = (BlockLantern)(new BlockLanternEmpty(lanternEmptyID)).setHardness(0.0F).setUnlocalizedName("lanternEmpty").setCreativeTab(creativeTab).setTextureName("gasesframework:lantern_empty"), "lanternEmpty");
+		
+		if(LANTERNS_ENCOURAGED())
+		{
+			GameRegistry.registerBlock(lanternGasEmpty = (BlockLantern)(new BlockLanternSpecial(a("lanternGasEmptyID", 552), 0, new ItemStack(Item.glassBottle), new ItemStack(Item.glassBottle), null)).setUnlocalizedName("lanternGasEmpty").setTextureName("gasesframework:lantern_gas0_off"), "lanternGasEmpty");
+			GameRegistry.registerBlock(lanternGas1 = (BlockLantern)(new BlockLantern(a("lanternGas1ID", 553), Combustibility.CONTROLLABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas1").setTextureName("gasesframework:lantern_gas0_on"), "lanternGas1");
+			GameRegistry.registerBlock(lanternGas2 = (BlockLantern)(new BlockLantern(a("lanternGas2ID", 555), Combustibility.FLAMMABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas2").setTextureName("gasesframework:lantern_gas0_on"), "lanternGas2");
+			GameRegistry.registerBlock(lanternGas3 = (BlockLantern)(new BlockLantern(a("lanternGas3ID", 557), Combustibility.HIGHLY_FLAMMABLE)).setLightValue(1.0F).setUnlocalizedName("lanternGas3").setTextureName("gasesframework:lantern_gas0_on"), "lanternGas3");
+			GameRegistry.registerBlock(lanternGas4 = (BlockLantern)(new BlockLantern(a("lanternGas4ID", 558), Combustibility.EXPLOSIVE)).setLightValue(1.0F).setUnlocalizedName("lanternGas4").setTextureName("gasesframework:lantern_gas0_on"), "lanternGas4");
+			GameRegistry.registerBlock(lanternGas5 = (BlockLantern)(new BlockLantern(a("lanternGas5ID", 559), Combustibility.HIGHLY_EXPLOSIVE)).setLightValue(1.0F).setUnlocalizedName("lanternGas5").setTextureName("gasesframework:lantern_gas0_on"), "lanternGas5");
+		}
 	}
 	
 	@EventHandler
@@ -215,42 +256,53 @@ public class GasesFramework
 		RenderingRegistry.registerBlockHandler(renderBlockPumpID, new RenderBlockPump());
 		renderBlockTankID = RenderingRegistry.getNextAvailableRenderId();
 		RenderingRegistry.registerBlockHandler(renderBlockTankID, new RenderBlockTank());
-	
+		
 		GameRegistry.addRecipe(new ItemStack(lanternEmpty, 4), "I", "G", 'I', Item.ingotIron, 'G', Block.glass);
-		GameRegistry.addRecipe(new ItemStack(gasPipeAir, 24), "III", 'I', Item.ingotIron);
-		GameRegistry.addRecipe(new ItemStack(gasPump), " I ", "PRP", " I ", 'I', Item.ingotIron, 'P', gasPipeAir, 'R', Item.redstone);
-		GameRegistry.addRecipe(new ItemStack(gasCollector), " P ", "PUP", " P ", 'U', gasPump, 'P', gasPipeAir);
-		GameRegistry.addRecipe(new ItemStack(gasTank), "IPI", "P P", "IPI", 'I', Item.ingotIron, 'P', gasPipeAir);
-		GameRegistry.addRecipe(new ItemStack(gasFurnaceIdle), " I ", "IFI", " I ", 'I', Item.ingotIron, 'F', Block.furnaceIdle);
-		GameRegistry.addShapelessRecipe(new ItemStack(gasSamplerExcluder), new ItemStack(Item.glassBottle), new ItemStack(Item.dyePowder, 1, 0));
-		GameRegistry.addShapelessRecipe(new ItemStack(gasSamplerIncluder), new ItemStack(Item.glassBottle), new ItemStack(Item.dyePowder, 1, 15));
+		LanguageRegistry.addName(lanternEmpty, "Lantern");
+		
+		if(LANTERNS_ENCOURAGED())
+		{
+			LanguageRegistry.addName(lanternGasEmpty, "Empty Gas Lantern");
+			LanguageRegistry.addName(lanternGas1, "Gas Lantern");
+			LanguageRegistry.addName(lanternGas2, "Gas Lantern");
+			LanguageRegistry.addName(lanternGas3, "Gas Lantern");
+			LanguageRegistry.addName(lanternGas4, "Gas Lantern");
+			LanguageRegistry.addName(lanternGas5, "Gas Lantern");
+		}
+		
+		if(MECHANICAL_ITEMS_ENCOURAGED())
+		{
+			GameRegistry.addRecipe(new ItemStack(gasPipeAir, 24), "III", 'I', Item.ingotIron);
+			GameRegistry.addRecipe(new ItemStack(gasPump), " I ", "PRP", " I ", 'I', Item.ingotIron, 'P', gasPipeAir, 'R', Item.redstone);
+			GameRegistry.addRecipe(new ItemStack(gasCollector), " P ", "PUP", " P ", 'U', gasPump, 'P', gasPipeAir);
+			GameRegistry.addRecipe(new ItemStack(gasTank), "IPI", "P P", "IPI", 'I', Item.ingotIron, 'P', gasPipeAir);
+			GameRegistry.addRecipe(new ItemStack(gasFurnaceIdle), " I ", "IFI", " I ", 'I', Item.ingotIron, 'F', Block.furnaceIdle);
+			GameRegistry.addShapelessRecipe(new ItemStack(gasSamplerExcluder), new ItemStack(Item.glassBottle), new ItemStack(Item.dyePowder, 1, 0));
+			GameRegistry.addShapelessRecipe(new ItemStack(gasSamplerIncluder), new ItemStack(Item.glassBottle), new ItemStack(Item.dyePowder, 1, 15));
+			
+			LanguageRegistry.addName(gasPipeAir, "Gas Pipe");
+			LanguageRegistry.addName(gasFurnaceIdle, "Gas Furnace");
+			LanguageRegistry.addName(gasPump, "Gas Pump");
+			LanguageRegistry.addName(gasTank, "Gas Tank");
+			LanguageRegistry.addName(gasCollector, "Gas Collector");
+			
+			GameRegistry.registerTileEntity(TileEntityPump.class, "gasPump");
+			GameRegistry.registerTileEntity(TileEntityGasCollector.class, "gasCollector");
+			GameRegistry.registerTileEntity(TileEntityTank.class, "gasTank");
+			GameRegistry.registerTileEntity(TileEntityGasFurnace.class, "gasPoweredFurnace");
+		}
 		
 		registerIgnitionBlock(Block.torchWood.blockID);
 		registerIgnitionBlock(Block.fire.blockID);
+		registerIgnitionBlock(gasFire.blockID);
 		
 		registerReaction(new ReactionIgnition());
 		
-		LanguageRegistry.addName(lanternEmpty, "Lantern");
-		LanguageRegistry.addName(lanternGasEmpty, "Empty Gas Lantern");
-		LanguageRegistry.addName(lanternGas1, "Gas Lantern");
-		LanguageRegistry.addName(lanternGas2, "Gas Lantern");
-		LanguageRegistry.addName(lanternGas3, "Gas Lantern");
-		LanguageRegistry.addName(lanternGas4, "Gas Lantern");
-		LanguageRegistry.addName(lanternGas5, "Gas Lantern");
-		LanguageRegistry.addName(gasPipeAir, "Gas Pipe");
-		LanguageRegistry.addName(gasFurnaceIdle, "Gas Furnace");
-		LanguageRegistry.addName(gasPump, "Gas Pump");
-		LanguageRegistry.addName(gasTank, "Gas Tank");
-		LanguageRegistry.addName(gasCollector, "Gas Collector");
-		
+		LanguageRegistry.addName(gasSmoke, "Smoke");
+		LanguageRegistry.addName(gasFire, "Ignited Gas");
 		LanguageRegistry.addName(gasBottle, "Bottle of Gas");
 		
 		LanguageRegistry.instance().addStringLocalization("itemGroup.tabGases", "en_US", "Glenn's Gases");
-		
-		GameRegistry.registerTileEntity(TileEntityPump.class, "gasPump");
-		GameRegistry.registerTileEntity(TileEntityGasCollector.class, "gasCollector");
-		GameRegistry.registerTileEntity(TileEntityTank.class, "gasTank");
-		GameRegistry.registerTileEntity(TileEntityGasFurnace.class, "gasPoweredFurnace");
 		
 		proxy.registerRenderers();
 		
@@ -357,6 +409,10 @@ public class GasesFramework
 	 */
 	public static void addSpecialFurnaceRecipe(ItemStack ingredient, ItemStack result, int cookTime)
 	{
+		if(!MECHANICAL_ITEMS_ENCOURAGED())
+		{
+			throw new RuntimeException("A furnace recipe was registered while mechanical items were not encouraged. Please put GasesFramework.ENCOURAGE_MECHANICAL_ITEMS() in the mod's static initalizer.");
+		}
 		TileEntityGasFurnace.specialFurnaceRecipes.add(new SpecialFurnaceRecipe(ingredient, result, cookTime));
 	}
 	
@@ -367,6 +423,10 @@ public class GasesFramework
 	 */
 	public static void queueLanternRecipe(ItemStack result, ItemStack ingredient)
 	{
+		if(!LANTERNS_ENCOURAGED())
+		{
+			throw new RuntimeException("A lantern recipe was registered while lanterns were not encouraged. Please put GasesFramework.ENCOURAGE_LANTERNS() in the mod's static initalizer.");
+		}
 		if(preInited)
 		{
 			GameRegistry.addShapelessRecipe(result, new ItemStack(lanternEmpty), ingredient);
@@ -375,5 +435,39 @@ public class GasesFramework
 		{
 			queuedLanternRecipes.add(new QueuedLanternRecipe(result, ingredient));
 		}
+	}
+	
+	/**
+	 * If your mod uses the mechanical items of Gases Framework, you must call this in your mod's static constructor.
+	 */
+	public static void ENCOURAGE_MECHANICAL_ITEMS()
+	{
+		ENCOURAGE_MECHANICAL_ITEMS_VAR = true;
+	}
+	
+	/**
+	 * If your mod uses lanterns in Gases Framework, you must call this in your mod's static constructor.
+	 */
+	public static void ENCOURAGE_LANTERNS()
+	{
+		ENCOURAGE_LANTERNS_VAR = true;
+	}
+	
+	/**
+	 * Returns whether mechanical items are encouraged or not.
+	 * @return
+	 */
+	public static boolean MECHANICAL_ITEMS_ENCOURAGED()
+	{
+		return ENCOURAGE_MECHANICAL_ITEMS_VAR;
+	}
+	
+	/**
+	 * Returns whether lanterns are encouraged or not.
+	 * @return
+	 */
+	public static boolean LANTERNS_ENCOURAGED()
+	{
+		return ENCOURAGE_LANTERNS_VAR;
 	}
 }

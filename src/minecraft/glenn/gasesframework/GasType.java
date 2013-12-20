@@ -5,10 +5,12 @@ import java.util.Map;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 
 public class GasType
 {
@@ -71,6 +73,10 @@ public class GasType
 	 * How much this gas will gradually slow down the player. NOTE: NOT IMPLEMENTED.
 	 */
 	public int slownessRate;
+	/**
+	 * The overlay image used when the player is inside the gas.
+	 */
+	//public static ResourceLocation overlayImage = new ResourceLocation("gases:textures/misc/gas_overlay.png");
 	
 	/**
 	 * Creates a new industrial gas type. Gas types are automatically registered.
@@ -207,11 +213,28 @@ public class GasType
 	}
 	
 	/**
+	 * Called when an entity touches the gas in block form.
+	 * @param entity
+	 */
+	public void onTouched(Entity entity)
+	{
+		if(damage > 0.0F)
+    	{
+    		entity.attackEntityFrom(DamageSource.generic, damage);
+    	}
+	}
+	
+	/**
 	 * Can this gas be used in pipes and can it be bottled?
 	 * @return
 	 */
 	public boolean isIndustrial()
 	{
 		return gasPipe != null;
+	}
+	
+	public ResourceLocation getOverlayImage()
+	{
+		return GasesFramework.gasOverlayImage;
 	}
 }
